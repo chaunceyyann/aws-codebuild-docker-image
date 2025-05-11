@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      # Log in to ECR
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+  build:
+    commands:
+      # Build the Docker image
+      - echo Building Docker image...
+      - docker build -t $ECR_REGISTRY/$REPO_NAME:latest .
+      # Run vulnerability scans
+      - echo Running Grype vulnerability scan...
+      - grype $ECR_REGISTRY/$REPO_NAME:latest --fail-on high
+      - echo Running Trivy vulnerability scan...
+      - trivy image --exit-code 1 --severity HIGH,CRITICAL $ECR_REGISTRY/$REPO_NAME:latest
+  post_build:
+    commands:
+      # Push the image to ECR
+      - echo Pushing Docker image to ECR...
+      - docker push $ECR_REGISTRY/$REPO_NAME:latest
+      - echo Build completed successfully.
+
+# No artifacts produced (image is pushed to ECR)
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: yes
