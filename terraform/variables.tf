@@ -32,3 +32,8 @@ variable "github_branch" {
   type        = string
   default     = "master"
 }
+
+variable "github_connection_arn" {
+  description = "ARN of the GitHub connection"
+  type        = string
+}
