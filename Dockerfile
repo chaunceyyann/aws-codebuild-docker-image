@@ -6,25 +6,29 @@ FROM public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0
 # Set working directory
 WORKDIR /app
 
+# Install Python 3.9 (instead of 3.10)
+RUN yum -y update \
+ && yum -y install python3 python3-pip \
+ && alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+ && alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.9 1
+
 # Install base dependencies and OpenSSL (for secure Git operations)
 RUN yum update -y && \
-    yum install -y \
-    python3.10 \
-    python3-pip \
-    git \
-    openssl \
-    unzip \
-    curl \
-    jq \
-    tar \
-    gzip && \
+    yum install -y --allowerasing \
+        curl \
+        git \
+        openssl \
+        unzip \
+        jq \
+        tar \
+        gzip && \
     yum clean all
 
 # Install AWS CLI v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
-    ./aws/install && \
-    rm -rf awscliv2.zip aws
+    ./aws/install --update && \
+    rm -rf aws awscliv2.zip
 
 # Install Docker
 RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-20.10.9.tgz | \
@@ -43,8 +47,8 @@ RUN curl -fsSL https://github.com/terraform-linters/tflint/releases/download/v0.
     chmod +x /usr/local/bin/tflint && \
     rm tflint.zip
 
-# Install Node.js 18
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+# Install Node.js 18.x
+RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash - && \
     yum install -y nodejs && \
     yum clean all
 
@@ -62,8 +66,10 @@ RUN curl -fsSL https://github.com/aquasecurity/trivy/releases/download/v0.50.0/t
 RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir awscli
 
-# Set non-root user for security
-RUN useradd -m codebuild-user
+# Create codebuild user if it doesn't exist
+RUN if ! id -u codebuild-user > /dev/null 2>&1; then \
+        useradd -m codebuild-user; \
+    fi
 USER codebuild-user
 
 # Verify installations
