@@ -4,14 +4,18 @@ module "ecr" {
   aws_region      = var.aws_region
 }
 
-module "pipeline" {
-  source = "./modules/pipeline"
+module "codebuild" {
+  source = "./modules/codebuild"
 
-  pipeline_name         = var.pipeline_name
-  aws_region            = var.aws_region
-  github_repo_owner     = var.github_repo_owner
-  github_repo_name      = var.github_repo_name
-  github_branch         = var.github_branch
-  github_connection_arn = var.github_connection_arn
-  ecr_repository_arn    = module.ecr.repository_arn
+  project_name       = var.codebuild_project_name
+  aws_region         = var.aws_region
+  ecr_repository_arn = module.ecr.repository_arn
+}
+
+module "s3_backend" {
+  source = "./modules/s3-backend"
+
+  bucket_name     = var.tfstate_bucket_name
+  dynamodb_table  = var.tfstate_dynamodb_table
+  aws_region      = var.aws_region
 }
