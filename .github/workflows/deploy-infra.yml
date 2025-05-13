@@ -30,10 +30,7 @@ jobs:
       - name: Terraform Init
         run: |
           cd terraform
-          terraform init -backend-config="bucket=docker-image-4codebuild-tfstate" \
-                         -backend-config="key=terraform.tfstate" \
-                         -backend-config="region=us-east-1" \
-                         -backend-config="dynamodb_table=docker-image-4codebuild-tfstate-lock"
+          terraform init
 
       - name: Terraform Plan
         run: |
@@ -41,9 +38,7 @@ jobs:
           terraform plan \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
-            -var="codebuild_project_name=docker-image-4codebuild" \
-            -var="tfstate_bucket_name=docker-image-4codebuild-tfstate" \
-            -var="tfstate_dynamodb_table=docker-image-4codebuild-tfstate-lock"
+            -var="codebuild_project_name=docker-image-4codebuild"
 
       - name: Terraform Apply
         run: |
@@ -51,6 +46,4 @@ jobs:
           terraform apply -auto-approve \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
-            -var="codebuild_project_name=docker-image-4codebuild" \
-            -var="tfstate_bucket_name=docker-image-4codebuild-tfstate" \
-            -var="tfstate_dynamodb_table=docker-image-4codebuild-tfstate-lock"
+            -var="codebuild_project_name=docker-image-4codebuild"
