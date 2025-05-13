@@ -12,3 +12,18 @@ variable "ecr_repository_arn" {
   description = "ARN of the ECR repository"
   type        = string
 }
+
+variable "vpc_id" {
+  description = "ID of the VPC"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
+}
+
+variable "ecr_repo_url" {
+  description = "URL of the ECR repository"
+  type        = string
+}
