@@ -1,0 +1,56 @@
+# aws-codebuild-docker-image/.github/workflows/deploy-infra.yml
+
+name: Deploy AWS Infrastructure
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init -backend-config="bucket=docker-image-4codebuild-tfstate" \
+                         -backend-config="key=terraform.tfstate" \
+                         -backend-config="region=us-east-1" \
+                         -backend-config="dynamodb_table=docker-image-4codebuild-tfstate-lock"
+
+      - name: Terraform Plan
+        run: |
+          cd terraform
+          terraform plan \
+            -var="aws_region=us-east-1" \
+            -var="ecr_repo_name=docker-image-4codebuild-repo" \
+            -var="codebuild_project_name=docker-image-4codebuild" \
+            -var="tfstate_bucket_name=docker-image-4codebuild-tfstate" \
+            -var="tfstate_dynamodb_table=docker-image-4codebuild-tfstate-lock"
+
+      - name: Terraform Apply
+        run: |
+          cd terraform
+          terraform apply -auto-approve \
+            -var="aws_region=us-east-1" \
+            -var="ecr_repo_name=docker-image-4codebuild-repo" \
+            -var="codebuild_project_name=docker-image-4codebuild" \
+            -var="tfstate_bucket_name=docker-image-4codebuild-tfstate" \
+            -var="tfstate_dynamodb_table=docker-image-4codebuild-tfstate-lock"
