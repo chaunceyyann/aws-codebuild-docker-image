@@ -1,4 +1,3 @@
-
 # IAM role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {
   name = "${var.project_name}-role"
@@ -51,6 +50,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
 # CodeBuild project
 resource "aws_codebuild_project" "build" {
   name          = var.project_name
+  description   = "CodeBuild project for building Docker image"
   service_role  = aws_iam_role.codebuild_role.arn
   build_timeout = 60
 
@@ -59,16 +59,43 @@ resource "aws_codebuild_project" "build" {
   }
 
   environment {
+    type                        = "LINUX_CONTAINER"
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
-    type                        = "LINUX_CONTAINER"
-    privileged_mode             = true
     image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = true
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.aws_region
+    }
   }
 
   source {
-    type      = "NO_SOURCE"
-    buildspec = "" # GitHub Actions provides steps, no buildspec.yml needed
+    type            = "NO_SOURCE"
+    buildspec       = <<-EOT
+      version: 0.2
+      phases:
+        build:
+          commands:
+            - echo "Building Docker image..."
+            - docker build -t ${var.ecr_repo_url}:latest .
+      artifacts:
+        files:
+          - imageDetail.json
+    EOT
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = "/aws/codebuild/${var.project_name}"
+    }
+  }
+
+  vpc_config {
+    vpc_id             = var.vpc_id
+    subnets            = var.private_subnet_ids
+    security_group_ids = [aws_security_group.codebuild_sg.id]
   }
 
   tags = {

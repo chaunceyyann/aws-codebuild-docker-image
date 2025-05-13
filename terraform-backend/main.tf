@@ -44,9 +44,9 @@ resource "aws_s3_bucket_acl" "tfstate" {
 }
 
 resource "aws_dynamodb_table" "tfstate_lock" {
-  name           = var.dynamodb_table
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "LockID"
+  name         = var.dynamodb_table
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
 
   attribute {
     name = "LockID"
