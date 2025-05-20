@@ -31,7 +31,7 @@ jobs:
             if (context.eventName === 'workflow_run') {
               // For workflow_run triggers, get version from the triggering workflow's job outputs
               version = context.payload.workflow_run.conclusion === 'success' 
-                ? context.payload.workflow_run.outputs.scanner_version  // match the scanner version output name!
+                ? context.payload.workflow_run.outputs.scanner_image_version  // match the exact output name!
                 : null;
               core.info(`[INFO] Retrieved scanner version from workflow_run job outputs: ${version}`);
             } else {
