@@ -82,13 +82,15 @@ jobs:
             echo "Image does not exist, proceeding with build"
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
+          # Add this line to set the version output
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and Test Docker Image
         if: steps.check_image.outputs.skip != 'true'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: docker-image-4codebuild-repo
-          VERSION: ${{ github.event.workflow_run.outputs.base_image_version }}
+          VERSION: ${{ steps.check_image.outputs.version }}
           COMMIT_HASH: ${{ github.sha }}
         run: |
           # Create image tag using version and commit hash
