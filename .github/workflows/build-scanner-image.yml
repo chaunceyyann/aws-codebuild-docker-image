@@ -16,6 +16,9 @@ permissions:
 
 jobs:
   BuildScannerImage:
+    if: |
+      github.event_name != 'workflow_run' || 
+      github.event.workflow_run.conclusion == 'success'
     runs-on: codebuild-code-scanner-4codebuild-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Get Latest Scanner Version
@@ -90,9 +93,7 @@ jobs:
           fi
 
       - name: Build Scanner Image
-        if: |
-          steps.check_image.outputs.skip != 'true' && 
-          (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+        if: steps.check_image.outputs.skip != 'true'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: code-scanner-4codebuild-repo
