@@ -23,23 +23,35 @@ jobs:
         id: get-scanner-version
         with:
           script: |
-            const infraWorkflows = await github.rest.actions.listWorkflowRuns({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'deploy-infra.yml',
-              status: 'success',  // Only get successful runs
-              per_page: 1
-            });
-            if (infraWorkflows.data.workflow_runs.length === 0) {
-              core.setFailed('No successful infrastructure workflow runs found');
-              return;
+            let version;
+            
+            if (context.eventName === 'workflow_run') {
+              // For workflow_run triggers, get version from the triggering workflow
+              version = context.payload.workflow_run.outputs?.scanner_image_version;
+              core.info(`Workflow run version: ${version}`);
+            } else {
+              // For other triggers, get from latest successful infra workflow
+              const infraWorkflows = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'deploy-infra.yml',
+                status: 'success',
+                per_page: 1
+              });
+              if (infraWorkflows.data.workflow_runs.length === 0) {
+                core.setFailed('No successful infrastructure workflow runs found');
+                return;
+              }
+              version = infraWorkflows.data.workflow_runs[0].outputs?.scanner_image_version;
+              core.info(`Infrastructure workflow version: ${version}`);
+              core.info('Full workflow data:', JSON.stringify(infraWorkflows.data.workflow_runs[0], null, 2));
             }
-            const lastRun = infraWorkflows.data.workflow_runs[0];
-            const version = lastRun.outputs?.scanner_image_version;
+
             if (!version) {
-              core.setFailed('Scanner version not found in infrastructure workflow outputs');
+              core.setFailed('Scanner version not found in workflow outputs');
               return;
             }
+            core.info(`Setting version output to: ${version}`);
             core.setOutput('version', version);
 
       - name: Checkout Repository
@@ -78,7 +90,9 @@ jobs:
           fi
 
       - name: Build Scanner Image
-        if: steps.check_image.outputs.skip != 'true' && ${{ github.event.workflow_run.conclusion == 'success' }}
+        if: |
+          steps.check_image.outputs.skip != 'true' && 
+          (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: code-scanner-4codebuild-repo
