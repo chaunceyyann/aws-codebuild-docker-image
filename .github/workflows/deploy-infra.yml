@@ -45,7 +45,14 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: |
+          cd terraform
+          terraform plan -no-color \
+            -var="aws_region=us-east-1" \
+            -var="ecr_repo_name=docker-image-4codebuild-repo" \
+            -var="codebuild_project_name=docker-image-4codebuild" \
+            -var="vpc_id=${{ secrets.VPC_ID }}" \
+            -var="private_subnet_ids=${{ secrets.PRIVATE_SUBNET_IDS }}"
 
       - name: Terraform Apply
         run: |
