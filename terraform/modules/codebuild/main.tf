@@ -90,18 +90,8 @@ resource "aws_codebuild_project" "build" {
   }
 
   source {
-    type            = "NO_SOURCE"
-    buildspec       = <<-EOT
-      version: 0.2
-      phases:
-        build:
-          commands:
-            - echo "Building Docker image..."
-            - docker build -t ${var.ecr_repo_url}:latest .
-      artifacts:
-        files:
-          - imageDetail.json
-    EOT
+    type      = "NO_SOURCE"
+    buildspec = file("${path.module}/buildspec.yml")
   }
 
   logs_config {
