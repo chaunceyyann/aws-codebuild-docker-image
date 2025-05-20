@@ -36,18 +36,23 @@ jobs:
             
             if (context.eventName === 'workflow_run') {
               // Get the jobs from the workflow run
-              const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              const jobsResponse = await github.rest.actions.listJobsForWorkflowRun({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 run_id: context.payload.workflow_run.id
               });
               
+              core.info(`[DEBUG] Jobs API Response: ${JSON.stringify(jobsResponse.data, null, 2)}`);
+              core.info(`[DEBUG] Number of jobs found: ${jobsResponse.data.jobs?.length || 0}`);
+              
               // Find the job that has our outputs
-              const deployJob = jobs.data.jobs.find(job => job.name === 'DeployECRAndCodeBuild');
+              const deployJob = jobsResponse.data.jobs?.find(job => job.name === 'DeployECRAndCodeBuild');
               
               if (deployJob) {
-                core.info(`[INFO] Found deploy job with outputs: ${JSON.stringify(deployJob.outputs)}`);
+                core.info(`[DEBUG] Found deploy job: ${JSON.stringify(deployJob, null, 2)}`);
                 version = deployJob.outputs?.base_image_version;
+              } else {
+                core.info('[DEBUG] Deploy job not found in response');
               }
               
               core.info(`[INFO] Retrieved base image version from workflow job outputs: ${version}`);
