@@ -24,22 +24,24 @@ jobs:
             let version;
             
             // Debug all available context
-            core.info('[INFO] Full context:', JSON.stringify({
+            const contextDebug = {
               eventName: context.eventName,
               payload: context.payload,
               repo: context.repo,
               workflow: context.workflow,
               job: context.job,
               action: context.action
-            }, null, 2));
+            };
+            core.info(`[INFO] Full context: ${JSON.stringify(contextDebug, null, 2)}`);
             
             if (context.eventName === 'workflow_run') {
-              core.info('[INFO] Workflow run details:', JSON.stringify({
+              const workflowDetails = {
                 conclusion: context.payload.workflow_run?.conclusion,
                 outputs: context.payload.workflow_run?.outputs,
                 id: context.payload.workflow_run?.id,
                 name: context.payload.workflow_run?.name
-              }, null, 2));
+              };
+              core.info(`[INFO] Workflow run details: ${JSON.stringify(workflowDetails, null, 2)}`);
               // For workflow_run triggers, get version from the triggering workflow's job outputs
               version = context.payload.workflow_run?.conclusion === 'success' 
                 ? context.payload.workflow_run?.outputs?.base_image_version
