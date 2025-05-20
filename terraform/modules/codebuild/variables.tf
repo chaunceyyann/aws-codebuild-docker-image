@@ -77,3 +77,8 @@ variable "description" {
   type        = string
   default     = "CodeBuild project"
 }
+
+variable "image_version" {
+  description = "Version of the Docker image to build"
+  type        = string
+}

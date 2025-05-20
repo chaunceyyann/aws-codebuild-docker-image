@@ -23,6 +23,7 @@ module "codebuild_docker" {
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   ecr_repo_url       = module.ecr.repository_url
+  image_version      = var.base_image_version
 
   image                 = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
   source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
@@ -40,6 +41,7 @@ module "codebuild_scanner" {
   private_subnet_ids = module.vpc.private_subnet_ids
   ecr_repo_url       = module.ecr.repository_url
 
+  image_version      = var.scanner_image_version
   image                 = "${module.ecr.repository_url}:latest"
   source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
   description           = "CodeBuild project for running security scans using custom Docker image"

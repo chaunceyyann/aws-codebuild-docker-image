@@ -21,3 +21,15 @@ variable "code_scanner_project_name" {
   type        = string
   default     = "code-scanner-4codebuild"
 }
+
+variable "base_image_version" {
+  description = "Version of the base Docker image"
+  type        = string
+  default     = "1.0.0"
+}
+
+variable "scanner_image_version" {
+  description = "Version of the scanner Docker image"
+  type        = string
+  default     = "1.0.0"
+}

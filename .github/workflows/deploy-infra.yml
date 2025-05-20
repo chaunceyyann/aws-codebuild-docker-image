@@ -11,6 +11,9 @@ on:
 jobs:
   DeployECRAndCodeBuild:
     runs-on: ubuntu-latest    # Changed from al2023 to ubuntu-latest
+    outputs:
+      base_image_version: ${{ steps.set_version.outputs.base_version }}
+      scanner_image_version: ${{ steps.set_version.outputs.scanner_version }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -40,21 +43,32 @@ jobs:
           cd terraform
           terraform init
 
+      - name: Set Versions
+        id: set_version
+        run: |
+          echo "base_version=1.0.1" >> $GITHUB_OUTPUT
+          echo "scanner_version=1.0.0" >> $GITHUB_OUTPUT
+
       - name: Terraform Plan
-        id: plan
+        if: github.event_name == 'pull_request'
         run: |
           cd terraform
           terraform plan -no-color \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
             -var="docker_builder_project_name=docker-image-4codebuild" \
-            -var="code_scanner_project_name=code-scanner-4codebuild"
+            -var="code_scanner_project_name=code-scanner-4codebuild" \
+            -var="base_image_version=${{ steps.set_version.outputs.base_version }}" \
+            -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
 
       - name: Terraform Apply
+        if: github.ref == 'refs/heads/master'
         run: |
           cd terraform
           terraform apply -auto-approve \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
             -var="docker_builder_project_name=docker-image-4codebuild" \
-            -var="code_scanner_project_name=code-scanner-4codebuild"
+            -var="code_scanner_project_name=code-scanner-4codebuild" \
+            -var="base_image_version=${{ steps.set_version.outputs.base_version }}" \
+            -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
