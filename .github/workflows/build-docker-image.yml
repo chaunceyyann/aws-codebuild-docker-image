@@ -26,19 +26,20 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'deploy-infra.yml',
+              status: 'success',  # Only get successful runs
               per_page: 1
             });
             if (workflows.data.workflow_runs.length === 0) {
-              core.setFailed('No infrastructure workflow runs found');
+              core.setFailed('No successful infrastructure workflow runs found');
               return;
             }
-            const lastRun = workflows.data.workflow_runs[0];
-            if (lastRun.conclusion !== 'success') {
-              core.setFailed('Last infrastructure deployment was not successful');
+            const version = workflows.data.workflow_runs[0].outputs?.base_image_version;
+            if (!version) {
+              core.setFailed('Base image version not found in workflow outputs');
               return;
             }
-            // Get version from last successful run
-            core.setOutput('version', lastRun.outputs.base_image_version);
+            core.info(`Found version: ${version}`);
+            core.setOutput('version', version);
 
       - name: Check Workflow Trigger
         if: github.event_name == 'workflow_run'
@@ -67,6 +68,13 @@ jobs:
         run: |
           # Get version based on trigger type
           VERSION=${{ github.event_name == 'workflow_run' && github.event.workflow_run.outputs.base_image_version || steps.check-workflow.outputs.version }}
+          
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version is empty"
+            exit 1
+          fi
+          
+          echo "Using version: $VERSION"
           
           # Get the short commit SHA
           SHORT_SHA=${GITHUB_SHA:0:7}
