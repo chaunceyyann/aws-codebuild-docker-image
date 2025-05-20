@@ -73,11 +73,10 @@ jobs:
             -var="base_image_version=${{ steps.set_version.outputs.base_version }}" \
             -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
 
-      - name: Set Workflow Outputs
+      - name: Set Job Outputs
         run: |
-          # These versions come from the set_version step
-          echo "base_image_version=${{ steps.set_version.outputs.base_version }}" >> "$GITHUB_OUTPUT"
-          echo "scanner_image_version=${{ steps.set_version.outputs.scanner_version }}" >> "$GITHUB_OUTPUT"
+          echo "base_image_version=${{ steps.set_version.outputs.base_version }}" >> $GITHUB_STATE
+          echo "scanner_image_version=${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_STATE
           
           # Also write to step summary for visibility
           echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
