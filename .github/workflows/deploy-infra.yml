@@ -27,16 +27,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Remove terraform state lock
-        if: failure()
+      - name: Remove existing terraform state lock
+        continue-on-error: true
         run: |
           aws dynamodb delete-item \
             --table-name docker-image-4codebuild-tfstate-lock \
-            --key '{"LockID": {"S": "docker-image-4codebuild-tfstate/terraform.tfstate"}}'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
+            --key '{"LockID": {"S": "docker-image-4codebuild-tfstate/terraform.tfstate"}}' \
+            --region us-east-1
 
       - name: Terraform Init
         run: |
