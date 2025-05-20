@@ -74,27 +74,12 @@ jobs:
             -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
 
       - name: Set Workflow Outputs
-        id: set-versions
         run: |
-          # Get versions from terraform output or wherever they're defined
-          BASE_IMAGE_VERSION=$(terraform -chdir=terraform output -raw base_image_version)
-          SCANNER_IMAGE_VERSION=$(terraform -chdir=terraform output -raw scanner_image_version)
+          # These versions come from the set_version step
+          echo "base_image_version=${{ steps.set_version.outputs.base_version }}" >> "$GITHUB_OUTPUT"
+          echo "scanner_image_version=${{ steps.set_version.outputs.scanner_version }}" >> "$GITHUB_OUTPUT"
           
-          echo "base_image_version=$BASE_IMAGE_VERSION" >> $GITHUB_OUTPUT
-          echo "scanner_image_version=$SCANNER_IMAGE_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Set Workflow Level Outputs
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.setOutput('base_image_version', '${{ steps.set_version.outputs.base_version }}');
-            core.setOutput('scanner_image_version', '${{ steps.set_version.outputs.scanner_version }}');
-            // Also write to step summary for visibility
-            core.summary
-              .addHeading('Workflow Outputs')
-              .addTable([
-                [{data: 'Output', header: true}, {data: 'Value', header: true}],
-                ['base_image_version', '${{ steps.set_version.outputs.base_version }}'],
-                ['scanner_image_version', '${{ steps.set_version.outputs.scanner_version }}']
-              ])
-              .write();
+          # Also write to step summary for visibility
+          echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
+          echo "* Base Image Version: ${{ steps.set_version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "* Scanner Image Version: ${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_STEP_SUMMARY

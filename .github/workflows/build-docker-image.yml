@@ -26,12 +26,11 @@ jobs:
             core.info('[INFO] Full event payload:', JSON.stringify(context.payload));
             
             if (context.eventName === 'workflow_run') {
-              const workflowRun = context.payload.workflow_run;
-              core.info('[INFO] Workflow run:', JSON.stringify(workflowRun));
-              // For workflow_run triggers, get version from the triggering workflow
-              core.info('[INFO] Workflow run outputs:', JSON.stringify(workflowRun?.outputs));
-              version = workflowRun?.outputs?.base_image_version;
-              core.info(`[INFO] Retrieved base image version from workflow_run: ${version}`);
+              // For workflow_run triggers, get version from the triggering workflow's job outputs
+              version = context.payload.workflow_run.conclusion === 'success' 
+                ? context.payload.workflow_run.outputs.base_image_version 
+                : null;
+              core.info(`[INFO] Retrieved base image version from workflow_run job outputs: ${version}`);
             } else {
               // For scheduled runs, get version from latest successful infra workflow
               const workflows = await github.rest.actions.listWorkflowRuns({
