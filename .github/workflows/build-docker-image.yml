@@ -35,18 +35,22 @@ jobs:
             core.info(`[INFO] Full context: ${JSON.stringify(contextDebug, null, 2)}`);
             
             if (context.eventName === 'workflow_run') {
-              const workflowDetails = {
-                conclusion: context.payload.workflow_run?.conclusion,
-                outputs: context.payload.workflow_run?.outputs,
-                id: context.payload.workflow_run?.id,
-                name: context.payload.workflow_run?.name
-              };
-              core.info(`[INFO] Workflow run details: ${JSON.stringify(workflowDetails, null, 2)}`);
-              // For workflow_run triggers, get version from the triggering workflow's job outputs
-              version = context.payload.workflow_run?.conclusion === 'success' 
-                ? context.payload.workflow_run?.outputs?.base_image_version
-                : null;
-              core.info(`[INFO] Retrieved base image version from workflow_run job outputs: ${version}`);
+              // Get the jobs from the workflow run
+              const jobs = await github.rest.actions.listJobsForWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.payload.workflow_run.id
+              });
+              
+              // Find the job that has our outputs
+              const deployJob = jobs.data.jobs.find(job => job.name === 'DeployECRAndCodeBuild');
+              
+              if (deployJob) {
+                core.info(`[INFO] Found deploy job with outputs: ${JSON.stringify(deployJob.outputs)}`);
+                version = deployJob.outputs?.base_image_version;
+              }
+              
+              core.info(`[INFO] Retrieved base image version from workflow job outputs: ${version}`);
             } else {
               // For scheduled runs, get version from latest successful infra workflow
               const workflows = await github.rest.actions.listWorkflowRuns({
