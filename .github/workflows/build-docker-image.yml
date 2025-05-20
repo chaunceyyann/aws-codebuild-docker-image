@@ -10,6 +10,7 @@ on:
 
 permissions:
   actions: read    # Add permissions to read workflow runs
+  contents: read   # Add permissions to read repository contents
 
 jobs:
   BuildDockerImage:
