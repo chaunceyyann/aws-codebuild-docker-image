@@ -26,7 +26,7 @@ jobs:
             if (context.eventName === 'workflow_run') {
               // For workflow_run triggers, get version directly from the triggering workflow
               version = context.payload.workflow_run.outputs?.base_image_version;
-              core.info(`Retrieved base image version from workflow_run: ${version}`);
+              core.info(`[INFO] Retrieved base image version from workflow_run: ${version}`);
             } else {
               // For scheduled runs, get version from latest successful infra workflow
               const workflows = await github.rest.actions.listWorkflowRuns({
@@ -38,17 +38,16 @@ jobs:
               });
               
               if (workflows.data.workflow_runs.length === 0) {
-                core.setFailed('No successful infrastructure workflow runs found');
+                core.setFailed('[ERROR] No successful infrastructure workflow runs found');
                 return;
               }
               
               version = workflows.data.workflow_runs[0].outputs?.base_image_version;
-              core.info(`Schedule trigger - Version from latest workflow: ${version}`);
-              core.info('Full workflow data:', JSON.stringify(workflows.data.workflow_runs[0], null, 2));
+              core.info(`[INFO] Retrieved base image version from latest infra workflow: ${version}`);
             }
             
             if (!version) {
-              core.setFailed('Base image version not found in workflow outputs');
+              core.setFailed('[ERROR] Base image version not found in workflow outputs');
               return;
             }
             

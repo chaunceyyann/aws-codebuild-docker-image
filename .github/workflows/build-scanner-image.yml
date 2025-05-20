@@ -28,10 +28,10 @@ jobs:
           script: |
             let version;
             
-            if (github.context.eventName === 'workflow_run') {
+            if (context.eventName === 'workflow_run') {
               // For workflow_run triggers, get version directly from the triggering workflow
-              version = github.context.payload.workflow_run.outputs?.scanner_image_version;
-              core.info(`Retrieved scanner version from workflow_run: ${version}`);
+              version = context.payload.workflow_run.outputs?.scanner_image_version;
+              core.info(`[INFO] Retrieved scanner version from workflow_run: ${version}`);
             } else {
               // For other triggers, get from latest successful infra workflow
               const infraWorkflows = await github.rest.actions.listWorkflowRuns({
@@ -43,16 +43,16 @@ jobs:
               });
               
               if (infraWorkflows.data.workflow_runs.length === 0) {
-                core.setFailed('No successful infrastructure workflow runs found');
+                core.setFailed('[ERROR] No successful infrastructure workflow runs found');
                 return;
               }
               
               version = infraWorkflows.data.workflow_runs[0].outputs?.scanner_image_version;
-              core.info(`Retrieved scanner version from latest infra workflow: ${version}`);
+              core.info(`[INFO] Retrieved scanner version from latest infra workflow: ${version}`);
             }
             
             if (!version) {
-              core.setFailed('Scanner version not found in workflow outputs');
+              core.setFailed('[ERROR] Scanner version not found in workflow outputs');
               return;
             }
             
