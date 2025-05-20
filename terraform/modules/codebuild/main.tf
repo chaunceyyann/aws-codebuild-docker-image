@@ -81,7 +81,7 @@ resource "aws_security_group" "codebuild_sg" {
 # CodeBuild project
 resource "aws_codebuild_project" "build" {
   name          = var.project_name
-  description   = "CodeBuild project for building Docker image"
+  description   = var.description
   service_role  = aws_iam_role.codebuild_role.arn
   build_timeout = 60
 
@@ -116,8 +116,15 @@ resource "aws_codebuild_project" "build" {
   }
 
   source {
-    type      = "NO_SOURCE"
-    buildspec = file("${path.module}/buildspec.yml")
+    type                = "GITHUB"
+    location            = var.source_repository_url
+    git_clone_depth     = 1
+    report_build_status = true
+    buildspec          = file("${path.module}/buildspec.yml")
+
+    git_submodules_config {
+      fetch_submodules = false
+    }
   }
 
   logs_config {

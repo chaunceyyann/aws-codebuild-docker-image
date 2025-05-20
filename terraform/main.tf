@@ -22,9 +22,11 @@ module "codebuild_docker" {
   ecr_repository_arn = module.ecr.repository_arn
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
-  ecr_repo_url      = module.ecr.repository_url
-  
-  image = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+  ecr_repo_url       = module.ecr.repository_url
+
+  image                 = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+  source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
+  description           = "CodeBuild project for building base Docker image with development tools"
 }
 
 # Static code scanner using our custom image
@@ -36,9 +38,11 @@ module "codebuild_scanner" {
   ecr_repository_arn = module.ecr.repository_arn
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
-  ecr_repo_url      = module.ecr.repository_url
-  
-  image = "${module.ecr.repository_url}:latest"
+  ecr_repo_url       = module.ecr.repository_url
+
+  image                 = "${module.ecr.repository_url}:latest"
+  source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
+  description           = "CodeBuild project for running security scans using custom Docker image"
   environment_variables = [
     {
       name  = "SCAN_TYPE"

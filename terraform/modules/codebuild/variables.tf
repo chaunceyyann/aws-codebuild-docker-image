@@ -66,3 +66,14 @@ variable "environment_variables" {
   }))
   default = []
 }
+
+variable "source_repository_url" {
+  description = "URL of the GitHub repository"
+  type        = string
+}
+
+variable "description" {
+  description = "Description of the CodeBuild project"
+  type        = string
+  default     = "CodeBuild project"
+}
