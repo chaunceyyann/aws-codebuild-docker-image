@@ -21,14 +21,14 @@ jobs:
         id: get-version
         with:
           script: |
-            core.info('[INFO] Full context payload:', JSON.stringify(context.payload));
-            core.info('[INFO] Event name:', context.eventName);
-            if (context.eventName === 'workflow_run') {
-              const workflowRun = context.payload.workflow_run;
+            core.info('[INFO] Full github context:', JSON.stringify(github.context));
+            core.info('[INFO] Event name:', github.context.eventName);
+            if (github.context.eventName === 'workflow_run') {
+              const workflowRun = github.context.payload.workflow_run;
               core.info('[INFO] Workflow run:', JSON.stringify(workflowRun));
               // For workflow_run triggers, get version from the triggering workflow
-              core.info('[INFO] Workflow run outputs:', JSON.stringify(context.payload.workflow_run.outputs));
-              version = context.payload.workflow_run.outputs?.base_image_version;
+              core.info('[INFO] Workflow run outputs:', JSON.stringify(workflowRun?.outputs));
+              version = workflowRun?.outputs?.base_image_version;
               core.info(`[INFO] Retrieved base image version from workflow_run: ${version}`);
             } else {
               // For scheduled runs, get version from latest successful infra workflow
