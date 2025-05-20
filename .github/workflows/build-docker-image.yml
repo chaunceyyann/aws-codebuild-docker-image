@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '*/10 * * * *'  # Run every 10 minutes
 
+permissions:
+  actions: read    # Add permissions to read workflow runs
+
 jobs:
   BuildDockerImage:
     runs-on: ubuntu-latest
