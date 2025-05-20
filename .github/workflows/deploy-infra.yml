@@ -9,8 +9,8 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  DeployECRAndCodeBuild:
+    runs-on: al2023    # Amazon Linux 2023
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -18,7 +18,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.6
+          terraform_version: 1.7.5
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
