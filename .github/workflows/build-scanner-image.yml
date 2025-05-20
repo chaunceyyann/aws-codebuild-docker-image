@@ -29,9 +29,9 @@ jobs:
             let version;
             
             if (context.eventName === 'workflow_run') {
-              // For workflow_run triggers, get version from the triggering workflow
-              version = context.payload.workflow_run.outputs?.scanner_image_version;
-              core.info(`Workflow run version: ${version}`);
+              // For workflow_run triggers, get version directly from the triggering workflow
+              version = context.event.workflow_run.outputs?.scanner_image_version;
+              core.info(`Retrieved scanner version from workflow_run: ${version}`);
             } else {
               // For other triggers, get from latest successful infra workflow
               const infraWorkflows = await github.rest.actions.listWorkflowRuns({
@@ -41,20 +41,21 @@ jobs:
                 status: 'success',
                 per_page: 1
               });
+              
               if (infraWorkflows.data.workflow_runs.length === 0) {
                 core.setFailed('No successful infrastructure workflow runs found');
                 return;
               }
+              
               version = infraWorkflows.data.workflow_runs[0].outputs?.scanner_image_version;
-              core.info(`Infrastructure workflow version: ${version}`);
-              core.info('Full workflow data:', JSON.stringify(infraWorkflows.data.workflow_runs[0], null, 2));
+              core.info(`Retrieved scanner version from latest infra workflow: ${version}`);
             }
-
+            
             if (!version) {
               core.setFailed('Scanner version not found in workflow outputs');
               return;
             }
-            core.info(`Setting version output to: ${version}`);
+            
             core.setOutput('version', version);
 
       - name: Checkout Repository
