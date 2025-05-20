@@ -1,6 +1,6 @@
 # IAM role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {
-  name = "${var.project_name}-role"
+  name = "${var.project_name}-codebuild-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -62,8 +62,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
 
 # Security group for CodeBuild
 resource "aws_security_group" "codebuild_sg" {
-  name        = "${var.project_name}-sg"
-  description = "Security group for CodeBuild project"
+  name        = "${var.project_name}-codebuild-sg"
+  description = "Security group for CodeBuild project ${var.project_name}"
   vpc_id      = var.vpc_id
 
   egress {
@@ -74,7 +74,7 @@ resource "aws_security_group" "codebuild_sg" {
   }
 
   tags = {
-    Name = "${var.project_name}-sg"
+    Name = "${var.project_name}-codebuild-sg"
   }
 }
 
