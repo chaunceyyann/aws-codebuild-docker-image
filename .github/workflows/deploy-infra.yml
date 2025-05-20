@@ -10,18 +10,10 @@ on:
 
 jobs:
   DeployECRAndCodeBuild:
-    runs-on: ubuntu-latest    # Changed from al2023 to ubuntu-latest
-    outputs:
-      base_image_version: ${{ steps.set_version.outputs.base_version }}
-      scanner_image_version: ${{ steps.set_version.outputs.scanner_version }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.5
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -29,6 +21,34 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
+      - name: Set Versions
+        id: set_version
+        run: |
+          echo "base_version=1.0.1" >> $GITHUB_OUTPUT
+          echo "scanner_version=1.0.0" >> $GITHUB_OUTPUT
+          
+          # Create version files for artifacts
+          echo "${{ steps.set_version.outputs.base_version }}" > base_version.txt
+          echo "${{ steps.set_version.outputs.scanner_version }}" > scanner_version.txt
+          
+          # Write to step summary for visibility
+          echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
+          echo "* Base Image Version: ${{ steps.set_version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "* Scanner Image Version: ${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Version Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: version-info
+          path: |
+            base_version.txt
+            scanner_version.txt
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
 
       - name: Remove existing terraform state lock
         continue-on-error: true
@@ -42,12 +62,6 @@ jobs:
         run: |
           cd terraform
           terraform init
-
-      - name: Set Versions
-        id: set_version
-        run: |
-          echo "base_version=1.0.1" >> $GITHUB_OUTPUT
-          echo "scanner_version=1.0.0" >> $GITHUB_OUTPUT
 
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
@@ -72,15 +86,3 @@ jobs:
             -var="code_scanner_project_name=code-scanner-4codebuild" \
             -var="base_image_version=${{ steps.set_version.outputs.base_version }}" \
             -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
-
-      - name: Set Job Outputs
-        id: set_job_outputs
-        run: |
-          # Set outputs at the step level
-          echo "base_image_version=${{ steps.set_version.outputs.base_version }}" >> $GITHUB_OUTPUT
-          echo "scanner_image_version=${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_OUTPUT
-          
-          # Also write to step summary for visibility
-          echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
-          echo "* Base Image Version: ${{ steps.set_version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
-          echo "* Scanner Image Version: ${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_STEP_SUMMARY
