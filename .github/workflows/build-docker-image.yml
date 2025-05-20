@@ -23,9 +23,9 @@ jobs:
           script: |
             let version;
             
-            if (context.eventName === 'workflow_run') {
+            if (github.context.eventName === 'workflow_run') {
               // For workflow_run triggers, get version directly from the triggering workflow
-              version = context.event.workflow_run.outputs?.base_image_version;
+              version = github.context.payload.workflow_run.outputs?.base_image_version;
               core.info(`Retrieved base image version from workflow_run: ${version}`);
             } else {
               // For scheduled runs, get version from latest successful infra workflow
