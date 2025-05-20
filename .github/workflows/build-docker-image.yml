@@ -21,10 +21,12 @@ jobs:
         id: get-version
         with:
           script: |
-            core.info('[INFO] Full github context:', JSON.stringify(github.context));
-            core.info('[INFO] Event name:', github.context.eventName);
-            if (github.context.eventName === 'workflow_run') {
-              const workflowRun = github.context.payload.workflow_run;
+            let version;
+            core.info('[INFO] Event name:', context.eventName);
+            core.info('[INFO] Full event payload:', JSON.stringify(context.payload));
+            
+            if (context.eventName === 'workflow_run') {
+              const workflowRun = context.payload.workflow_run;
               core.info('[INFO] Workflow run:', JSON.stringify(workflowRun));
               // For workflow_run triggers, get version from the triggering workflow
               core.info('[INFO] Workflow run outputs:', JSON.stringify(workflowRun?.outputs));
