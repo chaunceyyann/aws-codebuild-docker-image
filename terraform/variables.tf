@@ -15,13 +15,3 @@ variable "codebuild_project_name" {
   type        = string
   default     = "docker-image-4codebuild"
 }
-
-variable "vpc_id" {
-  description = "ID of the VPC where CodeBuild will run"
-  type        = string
-}
-
-variable "private_subnet_ids" {
-  description = "List of private subnet IDs where CodeBuild will run"
-  type        = list(string)
-}
