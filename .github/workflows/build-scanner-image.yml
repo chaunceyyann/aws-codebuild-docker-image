@@ -28,10 +28,26 @@ jobs:
           script: |
             let version;
             
+            // Debug all available context
+            core.info('[INFO] Full context:', JSON.stringify({
+              eventName: context.eventName,
+              payload: context.payload,
+              repo: context.repo,
+              workflow: context.workflow,
+              job: context.job,
+              action: context.action
+            }, null, 2));
+            
             if (context.eventName === 'workflow_run') {
-              // For workflow_run triggers, get version from the triggering workflow's job outputs
+              core.info('[INFO] Workflow run details:', JSON.stringify({
+                conclusion: context.payload.workflow_run?.conclusion,
+                outputs: context.payload.workflow_run?.outputs,
+                id: context.payload.workflow_run?.id,
+                name: context.payload.workflow_run?.name
+              }, null, 2));
+              
               version = context.payload.workflow_run.conclusion === 'success' 
-                ? context.payload.workflow_run.outputs.scanner_image_version  // match the exact output name!
+                ? context.payload.workflow_run.outputs.scanner_image_version
                 : null;
               core.info(`[INFO] Retrieved scanner version from workflow_run job outputs: ${version}`);
             } else {
