@@ -29,3 +29,11 @@ output "ecr_repository_arn" {
   description = "ARN of the ECR repository"
   value       = module.ecr.repository_arn
 }
+
+output "base_image_version" {
+  value = var.base_image_version
+}
+
+output "scanner_image_version" {
+  value = var.scanner_image_version
+}

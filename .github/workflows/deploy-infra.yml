@@ -72,3 +72,18 @@ jobs:
             -var="code_scanner_project_name=code-scanner-4codebuild" \
             -var="base_image_version=${{ steps.set_version.outputs.base_version }}" \
             -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
+
+      - name: Set Workflow Outputs
+        id: set-versions
+        run: |
+          # Get versions from terraform output or wherever they're defined
+          BASE_IMAGE_VERSION=$(terraform -chdir=terraform output -raw base_image_version)
+          SCANNER_IMAGE_VERSION=$(terraform -chdir=terraform output -raw scanner_image_version)
+          
+          echo "base_image_version=$BASE_IMAGE_VERSION" >> $GITHUB_OUTPUT
+          echo "scanner_image_version=$SCANNER_IMAGE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set Workflow Level Outputs
+        run: |
+          echo "base_image_version=${{ steps.set-versions.outputs.base_image_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "scanner_image_version=${{ steps.set-versions.outputs.scanner_image_version }}" >> $GITHUB_STEP_SUMMARY
