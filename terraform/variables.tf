@@ -10,8 +10,14 @@ variable "ecr_repo_name" {
   default     = "docker-image-4codebuild-repo"
 }
 
-variable "codebuild_project_name" {
-  description = "Name of the CodeBuild project"
+variable "docker_builder_project_name" {
+  description = "Name of the Docker builder CodeBuild project"
   type        = string
   default     = "docker-image-4codebuild"
+}
+
+variable "code_scanner_project_name" {
+  description = "Name of the code scanner CodeBuild project"
+  type        = string
+  default     = "code-scanner-4codebuild"
 }

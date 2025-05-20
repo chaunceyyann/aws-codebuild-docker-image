@@ -90,15 +90,28 @@ resource "aws_codebuild_project" "build" {
   }
 
   environment {
-    type                        = "LINUX_CONTAINER"
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
-    image_pull_credentials_type = "CODEBUILD"
-    privileged_mode             = true
+    type                        = var.environment_type
+    compute_type                = var.compute_type
+    image                       = var.image
+    image_pull_credentials_type = var.image_pull_credentials_type
+    privileged_mode             = var.privileged_mode
 
-    environment_variable {
-      name  = "AWS_DEFAULT_REGION"
-      value = var.aws_region
+    dynamic "environment_variable" {
+      for_each = concat(
+        [
+          {
+            name  = "AWS_DEFAULT_REGION"
+            value = var.aws_region
+            type  = "PLAINTEXT"
+          }
+        ],
+        var.environment_variables
+      )
+      content {
+        name  = environment_variable.value.name
+        value = environment_variable.value.value
+        type  = environment_variable.value.type
+      }
     }
   }
 

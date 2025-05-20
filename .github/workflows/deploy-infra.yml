@@ -47,7 +47,8 @@ jobs:
           terraform plan -no-color \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
-            -var="codebuild_project_name=docker-image-4codebuild"
+            -var="docker_builder_project_name=docker-image-4codebuild" \
+            -var="code_scanner_project_name=code-scanner-4codebuild"
 
       - name: Terraform Apply
         run: |
@@ -55,4 +56,5 @@ jobs:
           terraform apply -auto-approve \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
-            -var="codebuild_project_name=docker-image-4codebuild"
+            -var="docker_builder_project_name=docker-image-4codebuild" \
+            -var="code_scanner_project_name=code-scanner-4codebuild"

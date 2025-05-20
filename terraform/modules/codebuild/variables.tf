@@ -27,3 +27,42 @@ variable "ecr_repo_url" {
   description = "URL of the ECR repository"
   type        = string
 }
+
+variable "environment_type" {
+  description = "Type of build environment"
+  type        = string
+  default     = "LINUX_CONTAINER"
+}
+
+variable "compute_type" {
+  description = "Information about the compute resources the build project will use"
+  type        = string
+  default     = "BUILD_GENERAL1_SMALL"
+}
+
+variable "image" {
+  description = "Docker image to use for this build project"
+  type        = string
+}
+
+variable "image_pull_credentials_type" {
+  description = "Type of credentials AWS CodeBuild uses to pull images"
+  type        = string
+  default     = "CODEBUILD"
+}
+
+variable "privileged_mode" {
+  description = "If true, enables running the Docker daemon inside a Docker container"
+  type        = bool
+  default     = true
+}
+
+variable "environment_variables" {
+  description = "Additional environment variables to add to the build environment"
+  type = list(object({
+    name  = string
+    value = string
+    type  = string
+  }))
+  default = []
+}
