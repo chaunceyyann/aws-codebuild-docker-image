@@ -10,7 +10,7 @@ on:
 
 jobs:
   DeployECRAndCodeBuild:
-    runs-on: al2023    # Amazon Linux 2023
+    runs-on: ubuntu-latest    # Changed from al2023 to ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
