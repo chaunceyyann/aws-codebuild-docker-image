@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BASE_IMAGE_VERSION: "1.0.1"
-      SCANNER_IMAGE_VERSION: "1.0.0"
+      SCANNER_IMAGE_VERSION: "1.0.2"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -66,29 +66,3 @@ jobs:
             -var="code_scanner_project_name=code-scanner-4codebuild" \
             -var="base_image_version=${{ env.BASE_IMAGE_VERSION }}" \
             -var="scanner_image_version=${{ env.SCANNER_IMAGE_VERSION }}"
-
-      - name: Set and Upload Versions
-        if: github.ref == 'refs/heads/master'
-        id: set_version
-        run: |
-          echo "base_version=${{ env.BASE_IMAGE_VERSION }}" >> $GITHUB_OUTPUT
-          echo "scanner_version=${{ env.SCANNER_IMAGE_VERSION }}" >> $GITHUB_OUTPUT
-          
-          # Create version files for artifacts
-          echo "${{ env.BASE_IMAGE_VERSION }}" > base_version.txt
-          echo "${{ env.SCANNER_IMAGE_VERSION }}" > scanner_version.txt
-          
-          # Write to step summary for visibility
-          echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
-          echo "* Base Image Version: ${{ env.BASE_IMAGE_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "* Scanner Image Version: ${{ env.SCANNER_IMAGE_VERSION }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload Version Artifacts
-        if: github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v4
-        with:
-          name: version-info
-          path: |
-            base_version.txt
-            scanner_version.txt
-          retention-days: 1

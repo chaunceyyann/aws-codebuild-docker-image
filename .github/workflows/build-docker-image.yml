@@ -15,6 +15,9 @@ permissions:
 jobs:
   BuildDockerImage:
     runs-on: ubuntu-latest
+    env:
+      # Single place to update the version
+      BASE_IMAGE_VERSION: "1.0.1"
     steps:
       - name: Check Workflow Trigger
         if: github.event_name == 'workflow_run'
@@ -23,46 +26,6 @@ jobs:
             echo "Infrastructure workflow did not succeed"
             exit 1
           fi
-
-      - name: Get Workflow Artifacts
-        uses: actions/github-script@v7
-        id: get-artifacts
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id
-            });
-            
-            console.log(`Found ${artifacts.data.total_count} artifacts`);
-            console.log(JSON.stringify(artifacts.data.artifacts, null, 2));
-            
-            const versionArtifact = artifacts.data.artifacts.find(artifact => artifact.name === 'version-info');
-            
-            if (!versionArtifact) {
-              core.setFailed('No version-info artifact found');
-              return;
-            }
-            
-            // Set hardcoded versions as fallback
-            core.setOutput('base_version', '1.0.0');
-            core.setOutput('scanner_version', '1.0.0');
-
-      - name: Debug Downloaded Files
-        run: |
-          ls -la
-          echo "Content of base_version.txt:"
-          cat base_version.txt || echo "File not found"
-          echo "Content of scanner_version.txt:"
-          cat scanner_version.txt || echo "File not found"
-
-      - name: Get Base Image Version
-        id: get-version
-        run: |
-          VERSION="${{ steps.get-artifacts.outputs.base_version }}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using base image version: $VERSION"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -81,7 +44,8 @@ jobs:
       - name: Check Existing Image
         id: check_image
         run: |
-          VERSION=${{ steps.get-version.outputs.version }}
+          # Use environment variable directly
+          VERSION=${{ env.BASE_IMAGE_VERSION }}
           
           # Get the short commit SHA
           SHORT_SHA=${GITHUB_SHA:0:7}
