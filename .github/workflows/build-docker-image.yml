@@ -28,6 +28,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: version-info
+          run-id: ${{ github.event.workflow_run.id }}
+          
+      - name: Debug Downloaded Files
+        run: |
+          ls -la
+          echo "Content of base_version.txt:"
+          cat base_version.txt || echo "File not found"
+          echo "Content of scanner_version.txt:"
+          cat scanner_version.txt || echo "File not found"
 
       - name: Get Base Image Version
         id: get-version
