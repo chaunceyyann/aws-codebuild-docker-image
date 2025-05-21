@@ -22,37 +22,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Set Versions
-        id: set_version
-        run: |
-          echo "base_version=1.0.1" >> $GITHUB_OUTPUT
-          echo "scanner_version=1.0.0" >> $GITHUB_OUTPUT
-          
-          # Create version files for artifacts
-          echo "${{ steps.set_version.outputs.base_version }}" > base_version.txt
-          echo "${{ steps.set_version.outputs.scanner_version }}" > scanner_version.txt
-          
-          # Write to step summary for visibility
-          echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
-          echo "* Base Image Version: ${{ steps.set_version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
-          echo "* Scanner Image Version: ${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Check Artifacts
-        run: |
-          ls -l base_version.txt scanner_version.txt
-          cat base_version.txt
-          cat scanner_version.txt
-
-      - name: Upload Version Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: version-info
-          path: |
-            base_version.txt
-            scanner_version.txt
-          retention-days: 1  # Optional: keep artifacts for 1 day
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -94,3 +63,30 @@ jobs:
             -var="code_scanner_project_name=code-scanner-4codebuild" \
             -var="base_image_version=${{ steps.set_version.outputs.base_version }}" \
             -var="scanner_image_version=${{ steps.set_version.outputs.scanner_version }}"
+
+      - name: Set and Upload Versions
+        if: github.ref == 'refs/heads/master' # Only on successful terraform apply
+        id: set_version
+        run: |
+          echo "base_version=1.0.1" >> $GITHUB_OUTPUT
+          echo "scanner_version=1.0.0" >> $GITHUB_OUTPUT
+          
+          # Create version files for artifacts
+          echo "1.0.1" > base_version.txt
+          echo "1.0.0" > scanner_version.txt
+          
+          # Write to step summary for visibility
+          echo "## Workflow Outputs" >> $GITHUB_STEP_SUMMARY
+          echo "* Base Image Version: 1.0.1" >> $GITHUB_STEP_SUMMARY
+          echo "* Scanner Image Version: 1.0.0" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Version Artifacts
+        if: github.ref == 'refs/heads/master' # Only on successful terraform apply
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-info
+          path: |
+            base_version.txt
+            scanner_version.txt
+          retention-days: 1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
