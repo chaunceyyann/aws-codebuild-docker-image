@@ -28,6 +28,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: version-info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Get Base Image Version
         id: get-version

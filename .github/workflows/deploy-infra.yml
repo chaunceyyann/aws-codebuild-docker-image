@@ -50,6 +50,8 @@ jobs:
           path: |
             base_version.txt
             scanner_version.txt
+          retention-days: 1  # Optional: keep artifacts for 1 day
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
