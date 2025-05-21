@@ -37,8 +37,14 @@ jobs:
           echo "* Base Image Version: ${{ steps.set_version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
           echo "* Scanner Image Version: ${{ steps.set_version.outputs.scanner_version }}" >> $GITHUB_STEP_SUMMARY
 
+      - name: Check Artifacts
+        run: |
+          ls -l base_version.txt scanner_version.txt
+          cat base_version.txt
+          cat scanner_version.txt
+
       - name: Upload Version Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: version-info
           path: |
