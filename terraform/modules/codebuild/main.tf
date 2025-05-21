@@ -50,7 +50,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:GetDownloadUrlForLayer"
         ]
         Resource = [
-          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
+          # "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
+          "*"
         ]
       },
       {
