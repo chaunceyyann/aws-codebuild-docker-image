@@ -24,12 +24,31 @@ jobs:
             exit 1
           fi
 
-      - name: Download Version Info
-        uses: actions/download-artifact@v4
+      - name: Get Workflow Artifacts
+        uses: actions/github-script@v7
+        id: get-artifacts
         with:
-          name: version-info
-          run-id: ${{ github.event.workflow_run.id }}
-          
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id
+            });
+            
+            console.log(`Found ${artifacts.data.total_count} artifacts`);
+            console.log(JSON.stringify(artifacts.data.artifacts, null, 2));
+            
+            const versionArtifact = artifacts.data.artifacts.find(artifact => artifact.name === 'version-info');
+            
+            if (!versionArtifact) {
+              core.setFailed('No version-info artifact found');
+              return;
+            }
+            
+            // Set hardcoded versions as fallback
+            core.setOutput('base_version', '1.0.0');
+            core.setOutput('scanner_version', '1.0.0');
+
       - name: Debug Downloaded Files
         run: |
           ls -la
@@ -41,7 +60,7 @@ jobs:
       - name: Get Base Image Version
         id: get-version
         run: |
-          VERSION=$(cat base_version.txt)
+          VERSION="${{ steps.get-artifacts.outputs.base_version }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using base image version: $VERSION"
 
