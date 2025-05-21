@@ -34,7 +34,13 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       {
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken",
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
           "ecr:InitiateLayerUpload",
@@ -43,7 +49,9 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
-        Resource = "*"
+        Resource = [
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
+        ]
       },
       {
         Effect = "Allow"
@@ -148,3 +156,5 @@ resource "aws_codebuild_project" "build" {
     Project = "docker-image-4codebuild"
   }
 }
+
+data "aws_caller_identity" "current" {}
