@@ -19,7 +19,7 @@ jobs:
     if: |
       github.event_name != 'workflow_run' || 
       github.event.workflow_run.conclusion == 'success'
-    runs-on: codebuild-code-scanner-4codebuild-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on: ubuntu-latest
     env:
       # Single place to update the version
       SCANNER_IMAGE_VERSION: "1.0.2"
@@ -33,50 +33,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Check Existing Image
-        id: check_image
-        run: |
-          # Use environment variable directly
-          VERSION=${{ env.SCANNER_IMAGE_VERSION }}
           
-          # Get the short commit SHA
-          SHORT_SHA=${GITHUB_SHA:0:7}
-          IMAGE_TAG="${VERSION}-${SHORT_SHA}"
-          
-          # Check if image with this tag exists
-          if aws ecr describe-images \
-            --repository-name code-scanner-4codebuild-repo \
-            --image-ids imageTag=$IMAGE_TAG 2>/dev/null; then
-            echo "Image with tag $IMAGE_TAG already exists, skipping build"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Image does not exist, proceeding with build"
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build Scanner Image
-        if: steps.check_image.outputs.skip != 'true'
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: code-scanner-4codebuild-repo
-          BASE_ECR_REPO: docker-image-4codebuild-repo
-          VERSION: ${{ steps.check_image.outputs.version }}
-          COMMIT_HASH: ${{ github.sha }}
-        run: |
-          IMAGE_TAG="${VERSION}-${COMMIT_HASH:0:7}"
-          
-          # Build using base image from previous workflow
-          docker build \
-            --build-arg ECR_REPO_URL=$ECR_REGISTRY/$BASE_ECR_REPO \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-            -f container-static-code-scan/Dockerfile .
-          
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest 
+      - name: Run CodeBuild
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: code-scanner-4codebuild
+          env-vars-for-codebuild: |
+            VERSION=${{ env.SCANNER_IMAGE_VERSION }}
