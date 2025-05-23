@@ -6,7 +6,7 @@ on:
     types:
       - completed
   schedule:
-    - cron: '0 * * * *'  # Run once every hour at minute 0
+    - cron: '0 0 * * 0'  # Run once every week on Sunday at midnight
 
 permissions:
   actions: read    # Add permissions to read workflow runs
