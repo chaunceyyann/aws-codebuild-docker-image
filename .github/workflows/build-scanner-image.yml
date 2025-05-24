@@ -5,7 +5,7 @@ on:
     workflows: ["Build Docker Image"]
     types:
       - completed
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # Manual triggerr
   push:
     paths:
       - 'container-static-code-scan/**'
