@@ -25,7 +25,7 @@ module "codebuild_docker" {
   ecr_repo_url       = module.ecr.repository_url
   image_version      = var.base_image_version
 
-  image                 = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+  image                 = "aws/codebuild/amazonlinux-x86_64-standard:5.0"
   source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
   description           = "CodeBuild project for building base Docker image with development tools"
 }

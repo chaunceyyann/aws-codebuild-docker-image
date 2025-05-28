@@ -156,11 +156,12 @@ resource "aws_codebuild_project" "build" {
     }
   }
 
-  vpc_config {
-    vpc_id             = var.vpc_id
-    subnets            = var.private_subnet_ids
-    security_group_ids = [aws_security_group.codebuild_sg.id]
-  }
+  # Comment out or remove this block temporarily for testing
+  # vpc_config {
+  #   vpc_id             = var.vpc_id
+  #   subnets            = var.private_subnet_ids
+  #   security_group_ids = [aws_security_group.codebuild_sg.id]
+  # }
 
   tags = {
     Name    = var.project_name
