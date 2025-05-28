@@ -116,6 +116,16 @@ resource "aws_codebuild_project" "build" {
             name  = "AWS_DEFAULT_REGION"
             value = var.aws_region
             type  = "PLAINTEXT"
+          },
+          {
+            name  = "ECR_REGISTRY"
+            value = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "ECR_REPOSITORY"
+            value = var.ecr_repo_name
+            type  = "PLAINTEXT"
           }
         ],
         var.environment_variables

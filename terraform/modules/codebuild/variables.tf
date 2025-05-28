@@ -82,3 +82,9 @@ variable "image_version" {
   description = "Version of the Docker image to build"
   type        = string
 }
+
+variable "ecr_repo_name" {
+  description = "Name of the ECR repository"
+  type        = string
+  default     = "docker-image-4codebuild-repo"
+}

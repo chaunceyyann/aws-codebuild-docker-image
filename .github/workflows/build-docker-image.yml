@@ -37,54 +37,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Check Existing Image
-        id: check_image
-        run: |
-          # Use environment variable directly
-          VERSION=${{ env.BASE_IMAGE_VERSION }}
-          
-          # Get the short commit SHA
-          SHORT_SHA=${GITHUB_SHA:0:7}
-          IMAGE_TAG="${VERSION}-${SHORT_SHA}"
-          
-          # Check if image with this tag exists
-          if aws ecr describe-images \
-            --repository-name docker-image-4codebuild-repo \
-            --image-ids imageTag=$IMAGE_TAG 2>/dev/null; then
-            echo "Image with tag $IMAGE_TAG already exists, skipping build"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Image does not exist, proceeding with build"
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-          # Add this line to set the version output
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build and Test Docker Image
-        if: steps.check_image.outputs.skip != 'true'
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: docker-image-4codebuild-repo
-          VERSION: ${{ steps.check_image.outputs.version }}
-          COMMIT_HASH: ${{ github.sha }}
-        run: |
-          # Create image tag using version and commit hash
-          IMAGE_TAG="${VERSION}-${COMMIT_HASH:0:7}"
-          
-          # Remove the latest tag if it exists
-          aws ecr batch-delete-image \
-            --repository-name $ECR_REPOSITORY \
-            --image-ids imageTag=latest \
-            || true  # Don't fail if tag doesn't exist
-          
-          # Build the Docker image
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-                      -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          
-          # Push the Docker image
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest 
+      - name: Run CodeBuild
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: docker-image-4codebuild
+          env-vars-for-codebuild: |
+            VERSION=${{ env.BASE_IMAGE_VERSION }} 
