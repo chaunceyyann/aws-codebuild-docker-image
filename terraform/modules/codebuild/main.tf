@@ -149,7 +149,7 @@ resource "aws_codebuild_project" "build" {
     location            = var.source_repository_url
     git_clone_depth     = 1
     report_build_status = true
-    buildspec           = file("${path.root}/${var.buildspec_path}")
+    buildspec           = var.buildspec_path
 
     git_submodules_config {
       fetch_submodules = false
