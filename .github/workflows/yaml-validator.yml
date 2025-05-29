@@ -8,7 +8,8 @@ on:
 jobs:
   Validate-YAML:
     runs-on:
-      - codebuild--${{ github.run_id }}-${{ github.run_attempt }}  # Use CodeBuild runner
+      - codebuild-codebuild-yaml-validator-${{ github.run_id }}-${{ github.run_attempt }}
+      - buildspecOverride=container-yaml-validator/buildspec.yml  # Optional override if needed
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -21,4 +22,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: validation-results
-          path: '**/*'  # Upload any artifacts or logs from validation 
+          path: '**/*'  # Upload any artifacts or logs from validation
