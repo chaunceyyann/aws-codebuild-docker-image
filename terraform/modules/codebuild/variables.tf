@@ -88,3 +88,9 @@ variable "ecr_repo_name" {
   type        = string
   default     = "docker-image-4codebuild-repo"
 }
+
+variable "buildspec_path" {
+  description = "Path to the buildspec file relative to the Terraform root or module directory"
+  type        = string
+  default     = "container-codebuild-image/buildspec.yml"  # Default for Docker image build
+}
