@@ -143,10 +143,15 @@ resource "aws_codebuild_project" "build" {
     location            = var.source_repository_url
     git_clone_depth     = 1
     report_build_status = true
-    buildspec          = file("${path.module}/buildspec.yml")
+    buildspec           = file("${path.module}/buildspec.yml")
 
     git_submodules_config {
       fetch_submodules = false
+    }
+
+    auth {
+      type     = "PERSONAL_ACCESS_TOKEN"
+      resource = aws_secrets_manager_secret.github_token.arn  # Reference to the secret
     }
   }
 
@@ -156,17 +161,39 @@ resource "aws_codebuild_project" "build" {
     }
   }
 
-  # Comment out or remove this block temporarily for testing
-  # vpc_config {
-  #   vpc_id             = var.vpc_id
-  #   subnets            = var.private_subnet_ids
-  #   security_group_ids = [aws_security_group.codebuild_sg.id]
-  # }
+  vpc_config {
+    vpc_id             = var.vpc_id
+    subnets            = var.private_subnet_ids
+    security_group_ids = [aws_security_group.codebuild_sg.id]
+  }
 
   tags = {
     Name    = var.project_name
     Project = "docker-image-4codebuild"
   }
+}
+
+# Add Secrets Manager resource for GitHub token
+resource "aws_secrets_manager_secret" "github_token" {
+  name = "codebuild/github-token"
+}
+
+# Grant CodeBuild role access to Secrets Manager
+resource "aws_iam_role_policy" "codebuild_secrets_policy" {
+  role = aws_iam_role.codebuild_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = aws_secrets_manager_secret.github_token.arn
+      }
+    ]
+  })
 }
 
 data "aws_caller_identity" "current" {}
