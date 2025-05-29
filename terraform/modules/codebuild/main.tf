@@ -151,7 +151,7 @@ resource "aws_codebuild_project" "build" {
 
     auth {
       type     = "PERSONAL_ACCESS_TOKEN"
-      resource = aws_secrets_manager_secret.github_token.arn  # Reference to the secret
+      resource = data.aws_secretsmanager_secret.github_token.arn
     }
   }
 
@@ -173,8 +173,8 @@ resource "aws_codebuild_project" "build" {
   }
 }
 
-# Add Secrets Manager resource for GitHub token
-resource "aws_secrets_manager_secret" "github_token" {
+# Reference an existing secret in Secrets Manager
+data "aws_secretsmanager_secret" "github_token" {
   name = "codebuild/github-token"
 }
 
@@ -190,7 +190,7 @@ resource "aws_iam_role_policy" "codebuild_secrets_policy" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = aws_secrets_manager_secret.github_token.arn
+        Resource = data.aws_secretsmanager_secret.github_token.arn
       }
     ]
   })
