@@ -27,16 +27,8 @@ phases:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image to ECR...
-      - |
-        # Check if 'latest' tag exists in ECR, and delete it if it does
-        if aws ecr list-images --repository-name $ECR_REPOSITORY --filter tagStatus=TAGGED --query 'imageIds[?imageTag==`latest`]' --output json | grep -q "latest"; then
-          echo "Found existing 'latest' tag. Deleting it before pushing new image..."
-          IMAGE_DIGEST=$(aws ecr list-images --repository-name $ECR_REPOSITORY --filter tagStatus=TAGGED --query 'imageIds[?imageTag==`latest`].imageDigest' --output text)
-          aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids imageDigest=$IMAGE_DIGEST
-          echo "Deleted existing 'latest' tag."
-        else
-          echo "No existing 'latest' tag found. Proceeding with push."
-        fi
+      - echo "Deleted existing 'latest' tag."
+      - aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids imageTags=latest || true
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       - echo Writing image definitions file...
