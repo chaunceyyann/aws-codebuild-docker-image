@@ -148,11 +148,6 @@ resource "aws_codebuild_project" "build" {
     git_submodules_config {
       fetch_submodules = false
     }
-
-    auth {
-      type     = "PERSONAL_ACCESS_TOKEN"
-      resource = data.aws_secretsmanager_secret.github_token.arn
-    }
   }
 
   logs_config {
