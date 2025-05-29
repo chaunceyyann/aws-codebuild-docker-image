@@ -35,7 +35,7 @@ module "codebuild_docker" {
   source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
   description       = "CodeBuild project for building base Docker image with development tools"
   buildspec_path    = "container-codebuild-image/buildspec.yml"  # Path for Docker image build
-  ecr_repo_name     = module.ecr.repository_name  # Use base repo for Docker image
+  ecr_repo_name     = var.ecr_repo_name  # Use the input variable for base repo name
 }
 
 # Static code scanner using our custom image
@@ -52,7 +52,7 @@ module "codebuild_scanner" {
   source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
   description       = "CodeBuild project for running security scans using custom Docker image"
   buildspec_path    = "container-static-code-scan/buildspec.yml"  # Path for scanner build
-  ecr_repo_name     = module.ecr_scanner.repository_name  # Use scanner repo for pushing the image (sets ECR_REPOSITORY)
+  ecr_repo_name     = "code-scanner-4codebuild-repo"  # Use the hardcoded name for scanner repo (matches input to ecr_scanner)
   environment_variables = [
     {
       name  = "SCAN_TYPE"
