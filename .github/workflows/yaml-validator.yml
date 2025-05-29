@@ -1,0 +1,24 @@
+name: YAML Validator
+
+on:
+  push:
+    paths:
+      - 'image-recipes/**'  # Trigger on changes to YAML files in image-recipes directory
+
+jobs:
+  Validate-YAML:
+    runs-on:
+      - codebuild--${{ github.run_id }}-${{ github.run_attempt }}  # Use CodeBuild runner
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Run YAML Validator
+        run: |
+          echo "Validating YAML files in image-recipes directory..."
+          # The buildspec in CodeBuild will handle the validation
+      - name: Upload Validation Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-results
+          path: '**/*'  # Upload any artifacts or logs from validation 

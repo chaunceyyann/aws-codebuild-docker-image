@@ -61,3 +61,30 @@ module "codebuild_scanner" {
     }
   ]
 }
+
+# New CodeBuild project for YAML Validator Runner
+module "codebuild_yaml_validator" {
+  source            = "./modules/codebuild"
+  project_name      = "codebuild-yaml-validator"
+  aws_region        = var.aws_region
+  ecr_repository_arn = module.ecr.repository_arn  # Use base repo ARN for permissions if needed
+  vpc_id            = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  ecr_repo_url      = module.ecr.repository_url  # Not used for pushing images, just for environment if needed
+  image_version     = "1.0.0"  # Version for runner, can be adjusted
+  image             = "aws/codebuild/standard:7.0"  # Standard CodeBuild image, not using custom ECR image
+  source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"  # Same repo or adjust as needed
+  description       = "CodeBuild project for YAML validation runner in GitHub Actions"
+  buildspec_path    = "container-yaml-validator/buildspec.yml"  # Path for YAML validator buildspec
+  ecr_repo_name     = var.ecr_repo_name  # Not used for pushing, just to satisfy module requirement
+  environment_type  = "LINUX_CONTAINER"
+  compute_type      = "BUILD_GENERAL1_MEDIUM"  # Medium compute for runner tasks
+  privileged_mode   = false  # No Docker needed for this runner
+  environment_variables = [
+    {
+      name  = "RUNNER_TYPE"
+      value = "yaml-validator"
+      type  = "PLAINTEXT"
+    }
+  ]
+}
