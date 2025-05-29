@@ -11,20 +11,36 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=$VERSION-$COMMIT_HASH
+      - echo "Version is set to $VERSION"
+      - echo "Commit hash is $COMMIT_HASH"
+      - echo "Image tag will be $IMAGE_TAG"
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - SHORT_SHA=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG="${VERSION}-${SHORT_SHA}"
-      - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+      - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+      - echo Tagging image with latest...
+      - docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Pushing the Docker image...
+      - echo Pushing the Docker image to ECR...
+      - |
+        # Check if 'latest' tag exists in ECR, and delete it if it does
+        if aws ecr list-images --repository-name $ECR_REPOSITORY --filter tagStatus=TAGGED --query 'imageIds[?imageTag==`latest`]' --output json | grep -q "latest"; then
+          echo "Found existing 'latest' tag. Deleting it before pushing new image..."
+          IMAGE_DIGEST=$(aws ecr list-images --repository-name $ECR_REPOSITORY --filter tagStatus=TAGGED --query 'imageIds[?imageTag==`latest`].imageDigest' --output text)
+          aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids imageDigest=$IMAGE_DIGEST
+          echo "Deleted existing 'latest' tag."
+        else
+          echo "No existing 'latest' tag found. Proceeding with push."
+        fi
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      - echo Writing image definitions file...
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$ECR_REPOSITORY" "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" > imagedefinitions.json
 
 artifacts:
-  files:
-    - imageDefinitions.json 
+  files: imagedefinitions.json 
