@@ -126,6 +126,11 @@ resource "aws_codebuild_project" "build" {
             name  = "ECR_REPOSITORY"
             value = var.ecr_repo_name
             type  = "PLAINTEXT"
+          },
+          {
+            name  = "VERSION"
+            value = var.image_version
+            type  = "PLAINTEXT"
           }
         ],
         var.environment_variables
