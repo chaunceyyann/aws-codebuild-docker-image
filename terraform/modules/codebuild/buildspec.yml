@@ -28,7 +28,7 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image to ECR...
       - echo "Deleted existing 'latest' tag."
-      - aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids imageTags=latest || true
+      - aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids imageTag=latest || true
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       - echo Writing image definitions file...
