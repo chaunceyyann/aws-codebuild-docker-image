@@ -41,7 +41,7 @@ jobs:
       - name: Terraform Init
         run: |
           cd terraform
-          terraform init
+          terraform init -upgrade
 
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
