@@ -170,7 +170,7 @@ resource "aws_codebuild_project" "build" {
 
 # Reference an existing secret in Secrets Manager
 data "aws_secretsmanager_secret" "github_token" {
-  name = "codebuild/github-token"
+  name = "codebuild/github-oauth-token"
 }
 
 # Grant CodeBuild role access to Secrets Manager
