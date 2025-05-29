@@ -4,6 +4,9 @@
 ARG ECR_REPO_URL
 FROM ${ECR_REPO_URL}:latest
 
+# Display OS release information
+RUN cat /etc/os-release
+
 # Install Node.js 18.x
 RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash - && \
     yum install -y nodejs && \

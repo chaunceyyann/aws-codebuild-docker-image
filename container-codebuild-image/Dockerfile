@@ -1,4 +1,4 @@
-FROM amazonlinux:2
+FROM amazonlinux:2023
 
 # Install basic utilities
 RUN yum update -y && \
@@ -13,6 +13,9 @@ RUN yum update -y && \
     python3 \
     python3-pip \
     && yum clean all
+
+# Display OS release information
+RUN cat /etc/os-release
 
 # Install AWS CLI v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
