@@ -61,6 +61,6 @@ repos:
           - --args=--format=compact
 
   - repo: https://github.com/chaunceyyann/cyan-actions
-    rev: dev  # or main, or a tag/commit hash
+    rev: v0.1  # or main, or a tag/commit hash
     hooks:
-      - id: jira-commit-msg 
+      - id: jira-commit-msg
