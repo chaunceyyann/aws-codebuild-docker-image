@@ -42,8 +42,7 @@ RUN curl -fsSL https://github.com/docker/compose/releases/latest/download/docker
     chmod +x /usr/local/bin/docker-compose
 
 # Add any other tools or configurations needed for your builds
-RUN pip3 install --upgrade pip && \
-    pip3 install boto3
+RUN pip3 install boto3
 
 # Set working directory
 WORKDIR /workspace
