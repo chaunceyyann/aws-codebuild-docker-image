@@ -36,6 +36,8 @@ module "codebuild_docker" {
   description           = "CodeBuild project for building base Docker image with development tools"
   buildspec_path        = "container-codebuild-image/buildspec.yml" # Path for Docker image build
   ecr_repo_name         = var.ecr_repo_name                         # Use the input variable for base repo name
+
+  depends_on = [module.ecr]
 }
 
 # Static code scanner using our custom image
@@ -60,6 +62,8 @@ module "codebuild_scanner" {
       type  = "PLAINTEXT"
     }
   ]
+
+  depends_on = [module.ecr, module.ecr_scanner]
 }
 
 # New CodeBuild project for YAML Validator Runner
