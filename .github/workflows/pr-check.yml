@@ -1,0 +1,18 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [master, dev]
+
+jobs:
+  pre-commit:
+    uses: chaunceyyann/cyan-actions/.github/workflows/reusable-pre-commit.yml@dev
+    with:
+      python-version: '3.x'
+      fetch-depth: '0'
+
+  terraform-lint:
+    uses: chaunceyyann/cyan-actions/.github/workflows/reusable-terraform-lint.yml@dev
+    with:
+      working-directory: '.'
+      fetch-depth: '0'
