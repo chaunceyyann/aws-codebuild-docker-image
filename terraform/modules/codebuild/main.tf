@@ -50,7 +50,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchDeleteImage",
           "ecr:DescribeImages",
-          "ecr:DescribeRepositories"
+          "ecr:DescribeRepositories",
+          "ecr:ListImages"
         ]
         Resource = [
           "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/docker-image-4codebuild-repo",
