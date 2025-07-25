@@ -7,6 +7,7 @@ on:
       - completed
   schedule:
     - cron: '0 0 * * 0'  # Run once every week on Sunday at midnight
+  workflow_dispatch: # Allow manual trigger
 
 permissions:
   actions: read    # Add permissions to read workflow runs
