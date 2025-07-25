@@ -42,4 +42,4 @@ jobs:
         with:
           project-name: docker-image-4codebuild
           env-vars-for-codebuild: |
-            VERSION=${{ env.BASE_IMAGE_VERSION }} 
+            VERSION=${{ env.BASE_IMAGE_VERSION }}
