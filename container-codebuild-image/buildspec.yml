@@ -35,4 +35,4 @@ phases:
       - printf '[{"name":"%s","imageUri":"%s"}]' "$ECR_REPOSITORY" "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" > imagedefinitions.json
 
 artifacts:
-  files: imagedefinitions.json 
+  files: imagedefinitions.json

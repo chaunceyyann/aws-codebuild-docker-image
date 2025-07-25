@@ -48,11 +48,14 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:UploadLayerPart",
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchDeleteImage"
+          "ecr:BatchDeleteImage",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories"
         ]
         Resource = [
           "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/docker-image-4codebuild-repo",
-          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/code-scanner-4codebuild-repo"
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/code-scanner-4codebuild-repo",
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
         ]
       },
       {
