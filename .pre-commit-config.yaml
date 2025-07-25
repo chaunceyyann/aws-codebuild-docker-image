@@ -47,19 +47,6 @@ repos:
         types: [yaml, json]
         description: Format YAML and JSON files
 
-  # Terraform formatting
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.99.5
-    hooks:
-      - id: terraform_fmt
-        description: Format Terraform files
-      - id: terraform_docs
-        description: Generate Terraform documentation
-      - id: terraform_tflint
-        description: Lint Terraform files with TFLint
-        args:
-          - --args=--format=compact
-
   - repo: https://github.com/chaunceyyann/cyan-actions
     rev: v0.1  # or main, or a tag/commit hash
     hooks:
