@@ -37,3 +37,25 @@ resource "aws_ecr_lifecycle_policy" "this" {
     ]
   })
 }
+
+resource "aws_ecr_repository_policy" "codebuild_service_pull" {
+  repository = aws_ecr_repository.this.name
+
+  policy = jsonencode({
+    Version = "2008-10-17",
+    Statement = [
+      {
+        Sid      = "AllowCodeBuildServicePull"
+        Effect   = "Allow"
+        Principal = {
+          Service = "codebuild.amazonaws.com"
+        }
+        Action = [
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+      }
+    ]
+  })
+}
