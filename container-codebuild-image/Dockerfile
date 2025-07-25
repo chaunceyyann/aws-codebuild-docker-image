@@ -7,7 +7,6 @@ RUN dnf update -y && \
     gzip \
     unzip \
     git \
-    wget \
     jq \
     python3 \
     python3-pip \
