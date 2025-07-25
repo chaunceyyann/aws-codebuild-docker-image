@@ -21,25 +21,24 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     ./aws/install && \
     rm -rf aws awscliv2.zip
 
-# Install Terraform 1.6.6
-RUN curl -fsSL https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip -o terraform.zip && \
+# Install latest Terraform
+RUN curl -fsSL https://releases.hashicorp.com/terraform/$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r '.current_version')/terraform_$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r '.current_version')_linux_amd64.zip -o terraform.zip && \
     unzip terraform.zip -d /usr/local/bin && \
     chmod +x /usr/local/bin/terraform && \
     rm terraform.zip
 
-# Install tflint
-RUN curl -fsSL https://github.com/terraform-linters/tflint/releases/download/v0.50.0/tflint_linux_amd64.zip -o tflint.zip && \
+# Install latest TFLint
+RUN curl -fsSL https://github.com/terraform-linters/tflint/releases/latest/download/tflint_linux_amd64.zip -o tflint.zip && \
     unzip tflint.zip -d /usr/local/bin && \
     chmod +x /usr/local/bin/tflint && \
     rm tflint.zip
 
 # Install Docker
-RUN amazon-linux-extras install docker -y && \
-    yum install -y docker && \
+RUN dnf install -y docker && \
     systemctl enable docker
 
-# Install Docker Compose
-RUN curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
+# Install latest Docker Compose
+RUN curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && \
     chmod +x /usr/local/bin/docker-compose
 
 # Add any other tools or configurations needed for your builds
