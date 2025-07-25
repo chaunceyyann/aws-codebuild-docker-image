@@ -1,14 +1,13 @@
 FROM amazonlinux:2023
 
 # Install basic utilities
-RUN yum update -y && \
-    yum install -y \
+RUN dnf update -y && \
+    dnf install -y \
     tar \
     gzip \
     unzip \
     git \
     wget \
-    curl \
     jq \
     python3 \
     python3-pip \
