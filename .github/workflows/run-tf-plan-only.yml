@@ -7,7 +7,7 @@ on:
 
 jobs:
   plan-only-codepipeline:
-    if: github.event.pull_request.labels.length > 0 && github.event.pull_request.labels[0].name == 'Attach Plan'
+    if: contains(github.event.pull_request.labels.*.name, 'Attach Plan')
     uses: chaunceyyann/cyan-actions/.github/workflows/reusable-plan-only-pipeline.yml@v0.1
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
