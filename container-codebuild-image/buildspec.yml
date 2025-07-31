@@ -9,19 +9,19 @@ env:
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=$VERSION-$COMMIT_HASH
       - echo "Version is set to $VERSION"
       - echo "Commit hash is $COMMIT_HASH"
       - echo "Image tag will be $IMAGE_TAG"
-      # Check if the tag already exists
+      # Check if the tag already exists before doing anything else
       - |
         if aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --region $AWS_DEFAULT_REGION | grep -q '"imageTag":'; then
           echo "Image tag $IMAGE_TAG already exists in $ECR_REPOSITORY. Skipping build and push."
           exit 0
         fi
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
   build:
     commands:
       - echo Build started on `date`

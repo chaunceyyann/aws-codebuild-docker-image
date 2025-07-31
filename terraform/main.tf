@@ -92,7 +92,7 @@ module "codebuild_scanner" {
   private_subnet_ids    = module.vpc.private_subnet_ids
   ecr_repo_url          = module.ecr_scanner.repository_url # This is passed as ECR_REGISTRY for pushing the scanner image
   image_version         = var.scanner_image_version
-  image                 = "${module.ecr.repository_url}:latest" # Use base image as build environment
+  image                 = "aws/codebuild/amazonlinux-x86_64-standard:5.0" # Use official AWS CodeBuild image
   source_repository_url = "https://github.com/chaunceyyann/aws-codebuild-docker-image"
   description           = "CodeBuild project for running security scans using custom Docker image"
   buildspec_path        = "container-static-code-scan/buildspec.yml" # Path for scanner build
