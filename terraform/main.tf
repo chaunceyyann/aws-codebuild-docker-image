@@ -1,5 +1,46 @@
 # aws-codebuild-docker-image/terraform/main.tf
 
+# Local variable for GitHub repositories that need CodeBuild runners
+locals {
+  github_repos = [
+    {
+      name        = "cyan-actions"
+      owner       = "chaunceyyann"
+      description = "GitHub Actions runner for cyan-actions repository"
+      runner_types = ["python-app", "nodejs-api", "terraform-infra"]  # Multiple types
+      branch      = "main"
+    },
+    {
+      name        = "aws-codebuild-docker-image"
+      owner       = "chaunceyyann"
+      description = "GitHub Actions runner for aws-codebuild-docker-image repository"
+      runner_types = ["terraform-infra"]  # Single type
+      branch      = "main"
+    },
+    {
+      name        = "comfyui-image-processing-nodes"
+      owner       = "chaunceyyann"
+      description = "GitHub Actions runner for comfyui-image-processing-nodes repository"
+      runner_types = ["python-app"]  # Single type
+      branch      = "main"
+    },
+    {
+      name        = "BJST"
+      owner       = "chaunceyyann"
+      description = "GitHub Actions runner for BJST repository"
+      runner_types = ["react-frontend"]  # Single type
+      branch      = "main"
+    },
+    {
+      name        = "aws-imagebuilder-image"
+      owner       = "chaunceyyann"
+      description = "GitHub Actions runner for aws-imagebuilder-image repository"
+      runner_types = ["terraform-infra"]  # Single type
+      branch      = "main"
+    }
+  ]
+}
+
 module "ecr" {
   source = "./modules/ecr"
 
@@ -66,6 +107,72 @@ module "codebuild_scanner" {
   ]
 
   depends_on = [module.ecr, module.ecr_scanner]
+}
+
+# Dynamic CodeBuild projects as GitHub Actions runners
+# Each project is created from the local.github_repos list
+module "codebuild_runners" {
+  for_each = { for repo in local.github_repos : repo.name => repo }
+
+  source                = "./modules/codebuild"
+  project_name          = "${each.value.name}-runner"
+  aws_region            = var.aws_region
+  ecr_repository_arn    = module.ecr.repository_arn
+  vpc_id                = module.vpc.vpc_id
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  ecr_repo_url          = module.ecr.repository_url
+  image_version         = "1.0.0"
+  image                 = "${module.ecr.repository_url}:latest"
+  source_repository_url = "https://github.com/${each.value.owner}/${each.value.name}"
+  description           = each.value.description
+  buildspec_path        = "buildspecs/runner.yml"
+  ecr_repo_name         = var.ecr_repo_name
+
+  # GitHub repository configuration
+  github_owner                 = each.value.owner
+  github_repo                  = each.value.name
+  github_branch                = each.value.branch
+
+  # Enable webhook for automatic builds
+  webhook_enabled = true
+  webhook_filter_groups = [
+    [
+      {
+        type                 = "EVENT"
+        pattern              = "PUSH"
+        exclude_matched_pattern = false
+      },
+      {
+        type                 = "HEAD_REF"
+        pattern              = "refs/heads/${each.value.branch}"
+        exclude_matched_pattern = false
+      },
+      {
+        type                 = "HEAD_REF"
+        pattern              = "refs/heads/dev"
+        exclude_matched_pattern = false
+      }
+    ]
+  ]
+
+  environment_type = "LINUX_CONTAINER"
+  compute_type     = "BUILD_GENERAL1_MEDIUM"
+  privileged_mode  = false
+
+  environment_variables = [
+    {
+      name  = "RUNNER_TYPES"
+      value = join(",", each.value.runner_types)
+      type  = "PLAINTEXT"
+    },
+    {
+      name  = "PRIMARY_RUNNER_TYPE"
+      value = each.value.runner_types[0]
+      type  = "PLAINTEXT"
+    }
+  ]
+
+  depends_on = [module.ecr]
 }
 
 # New CodeBuild project for YAML Validator Runner
