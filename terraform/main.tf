@@ -152,6 +152,27 @@ module "codebuild_runners" {
         pattern              = "refs/heads/dev"
         exclude_matched_pattern = false
       }
+    ],
+    [
+      {
+        type                 = "EVENT"
+        pattern              = "PULL_REQUEST_CREATED"
+        exclude_matched_pattern = false
+      }
+    ],
+    [
+      {
+        type                 = "EVENT"
+        pattern              = "PULL_REQUEST_UPDATED"
+        exclude_matched_pattern = false
+      }
+    ],
+    [
+      {
+        type                 = "EVENT"
+        pattern              = "PULL_REQUEST_REOPENED"
+        exclude_matched_pattern = false
+      }
     ]
   ]
 
