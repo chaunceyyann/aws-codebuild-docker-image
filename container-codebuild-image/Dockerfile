@@ -10,7 +10,6 @@ RUN dnf update -y && \
     jq \
     python3 \
     python3-pip \
-    curl \
     wget \
     && yum clean all
 
