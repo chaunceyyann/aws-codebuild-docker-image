@@ -11,16 +11,18 @@ RUN dnf update -y && \
     python3.11 \
     python3.11-pip \
     wget \
-    && yum clean all && \
-    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
-    alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
+    && dnf clean all
+
+# Display OS release iformation
+RUN cat /etc/os-release
 
 # Install latest YQ dynamically
 RUN curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
 
-# Display OS release information
-RUN cat /etc/os-release
+# Set up Python 3.11 as default
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
 
 # Install AWS CLI v2 (latest)
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
@@ -41,7 +43,7 @@ RUN curl -fsSL https://github.com/terraform-linters/tflint/releases/latest/downl
     rm tflint.zip
 
 # Install Docker
-RUN dnf install -y docker && \
+RUN yum install -y docker && \
     systemctl enable docker
 
 # Install latest Docker Compose dynamically
