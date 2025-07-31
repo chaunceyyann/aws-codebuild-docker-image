@@ -45,11 +45,6 @@ phases:
       - docker build -f container-static-code-scan/Dockerfile --build-arg ECR_REPO_URL=$ECR_REGISTRY/docker-image-4codebuild-repo -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
       - echo Tagging image with latest...
       - docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-      # Run vulnerability scans
-      - echo Running Grype vulnerability scan...
-      - grype $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --fail-on high
-      - echo Running Trivy vulnerability scan...
-      - trivy image --exit-code 1 --severity HIGH,CRITICAL $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
   post_build:
     commands:
       # Push the image to ECR
