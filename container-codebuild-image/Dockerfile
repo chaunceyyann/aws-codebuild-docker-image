@@ -42,13 +42,9 @@ RUN curl -fsSL https://github.com/terraform-linters/tflint/releases/latest/downl
     chmod +x /usr/local/bin/tflint && \
     rm tflint.zip
 
-# Install Docker
-RUN yum install -y docker && \
-    systemctl enable docker
 
-# Install latest Docker Compose dynamically
-RUN curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && \
-    chmod +x /usr/local/bin/docker-compose
+
+
 
 # Install GitHub CLI (latest)
 RUN curl -fsSL https://github.com/cli/cli/releases/latest/download/gh_$(curl -s https://api.github.com/repos/cli/cli/releases/latest | jq -r '.tag_name' | sed 's/v//')_linux_amd64.tar.gz | tar -xz && \
@@ -80,8 +76,6 @@ RUN echo "=== VERIFYING ALL TOOLS ===" && \
     echo "AWS CLI: $(aws --version)" && \
     echo "Terraform: $(terraform version)" && \
     echo "TFLint: $(tflint --version)" && \
-    echo "Docker: $(docker --version)" && \
-    echo "Docker Compose: $(docker-compose --version)" && \
     echo "GitHub CLI: $(gh --version)" && \
     echo "Node.js: $(node --version)" && \
     echo "npm: $(npm --version)" && \
