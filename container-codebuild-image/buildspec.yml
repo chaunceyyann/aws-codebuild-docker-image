@@ -14,14 +14,29 @@ phases:
       - echo "Version is set to $VERSION"
       - echo "Commit hash is $COMMIT_HASH"
       - echo "Image tag will be $IMAGE_TAG"
-      # Check if the tag already exists before doing anything else
-      - |
-        if aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --region $AWS_DEFAULT_REGION | grep -q '"imageTag":'; then
-          echo "Image tag $IMAGE_TAG already exists in $ECR_REPOSITORY. Skipping build and push."
-          exit 0
-        fi
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - echo "Starting Docker daemon..."
+      - nohup /usr/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 &
+      - timeout 60 sh -c "until docker info; do echo .; sleep 1; done"
+      # Check if the tag already exists after Docker is ready
+      - |
+        echo "Checking if image tag $IMAGE_TAG already exists in $ECR_REPOSITORY..."
+        echo "Repository: $ECR_REPOSITORY"
+        echo "Region: $AWS_DEFAULT_REGION"
+        echo "Image tag: $IMAGE_TAG"
+
+        # List all images to debug
+        echo "Listing all images in repository:"
+        aws ecr list-images --repository-name $ECR_REPOSITORY --region $AWS_DEFAULT_REGION
+
+        # Check if specific tag exists
+        if aws ecr list-images --repository-name $ECR_REPOSITORY --region $AWS_DEFAULT_REGION --filter tagStatus=TAGGED --query "imageIds[?imageTag=='$IMAGE_TAG']" --output text | grep -q "$IMAGE_TAG"; then
+          echo "Image tag $IMAGE_TAG already exists in $ECR_REPOSITORY. Skipping build and push."
+          exit 0
+        else
+          echo "Image tag $IMAGE_TAG does not exist. Proceeding with build."
+        fi
   build:
     commands:
       - echo Build started on `date`

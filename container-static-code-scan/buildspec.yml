@@ -21,9 +21,21 @@ phases:
       - echo "Image tag will be $IMAGE_TAG"
       # Check if the tag already exists
       - |
-        if aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --region $AWS_DEFAULT_REGION | grep -q '"imageTag":'; then
+        echo "Checking if image tag $IMAGE_TAG already exists in $ECR_REPOSITORY..."
+        echo "Repository: $ECR_REPOSITORY"
+        echo "Region: $AWS_DEFAULT_REGION"
+        echo "Image tag: $IMAGE_TAG"
+
+        # List all images to debug
+        echo "Listing all images in repository:"
+        aws ecr list-images --repository-name $ECR_REPOSITORY --region $AWS_DEFAULT_REGION
+
+        # Check if specific tag exists
+        if aws ecr list-images --repository-name $ECR_REPOSITORY --region $AWS_DEFAULT_REGION --filter tagStatus=TAGGED --query "imageIds[?imageTag=='$IMAGE_TAG']" --output text | grep -q "$IMAGE_TAG"; then
           echo "Image tag $IMAGE_TAG already exists in $ECR_REPOSITORY. Skipping build and push."
           exit 0
+        else
+          echo "Image tag $IMAGE_TAG does not exist. Proceeding with build."
         fi
   build:
     commands:
