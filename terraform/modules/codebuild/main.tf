@@ -157,6 +157,25 @@ resource "aws_codebuild_project" "build" {
     git_submodules_config {
       fetch_submodules = false
     }
+
+    # GitHub Actions runner configuration
+    dynamic "auth" {
+      for_each = var.enable_github_actions_runner ? [1] : []
+      content {
+        type     = "OAUTH"
+        resource = data.aws_secretsmanager_secret.github_token.arn
+      }
+    }
+  }
+
+  # GitHub Actions runner configuration
+  dynamic "github_actions_config" {
+    for_each = var.enable_github_actions_runner ? [1] : []
+    content {
+      github_token = data.aws_secretsmanager_secret.github_token.arn
+      owner        = var.github_owner
+      repository   = var.github_repo
+    }
   }
 
   logs_config {
@@ -174,6 +193,24 @@ resource "aws_codebuild_project" "build" {
   tags = {
     Name    = var.project_name
     Project = "docker-image-4codebuild"
+  }
+}
+
+# Webhook for automatic builds
+resource "aws_codebuild_webhook" "main" {
+  count = var.webhook_enabled ? 1 : 0
+
+  project_name = aws_codebuild_project.build.name
+
+  filter_group {
+    dynamic "filter" {
+      for_each = var.webhook_filter_groups[0]
+      content {
+        type                    = filter.value.type
+        pattern                 = filter.value.pattern
+        exclude_matched_pattern = filter.value.exclude_matched_pattern
+      }
+    }
   }
 }
 

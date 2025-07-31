@@ -1,0 +1,243 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Starting GitHub Actions runner build"
+      - echo "Runner types: $RUNNER_TYPES"
+      - echo "Primary runner type: $PRIMARY_RUNNER_TYPE"
+      - echo "Repository: $SOURCE_REPOSITORY_URL"
+      - echo "Branch: $CODEBUILD_WEBHOOK_HEAD_REF"
+      - echo "Commit: $CODEBUILD_RESOLVED_SOURCE_VERSION"
+
+      # Verify all required tools are available in the baked image
+      - echo "=== VERIFYING BAKED IMAGE TOOLS ==="
+      - |
+        echo "Checking base system tools..."
+        echo "Python: $(python3 --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Pip: $(pip3 --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Node.js: $(node --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "NPM: $(npm --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "NPX: $(npx --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "AWS CLI: $(aws --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Terraform: $(terraform --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "TFLint: $(tflint --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Docker: $(docker --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Docker Compose: $(docker-compose --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Git: $(git --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Curl: $(curl --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "Wget: $(wget --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "JQ: $(jq --version 2>/dev/null || echo 'NOT FOUND')"
+        echo "YQ: $(yq --version 2>/dev/null || echo 'NOT FOUND')"
+
+      # Check for critical missing tools and fail if any are missing
+      - |
+        echo "=== CHECKING FOR CRITICAL TOOLS ==="
+        MISSING_TOOLS=()
+
+        # Check Python tools
+        if ! command -v python3 &> /dev/null; then
+          MISSING_TOOLS+=("python3")
+        fi
+
+        if ! command -v pip3 &> /dev/null; then
+          MISSING_TOOLS+=("pip3")
+        fi
+
+        # Check Node.js tools
+        if ! command -v node &> /dev/null; then
+          MISSING_TOOLS+=("node")
+        fi
+
+        if ! command -v npm &> /dev/null; then
+          MISSING_TOOLS+=("npm")
+        fi
+
+        # Check AWS tools
+        if ! command -v aws &> /dev/null; then
+          MISSING_TOOLS+=("aws-cli")
+        fi
+
+        # Check Terraform tools
+        if ! command -v terraform &> /dev/null; then
+          MISSING_TOOLS+=("terraform")
+        fi
+
+        if ! command -v tflint &> /dev/null; then
+          MISSING_TOOLS+=("tflint")
+        fi
+
+        # Check Docker tools
+        if ! command -v docker &> /dev/null; then
+          MISSING_TOOLS+=("docker")
+        fi
+
+        if ! command -v docker-compose &> /dev/null; then
+          MISSING_TOOLS+=("docker-compose")
+        fi
+
+        # Check Git
+        if ! command -v git &> /dev/null; then
+          MISSING_TOOLS+=("git")
+        fi
+
+        # Report missing tools
+        if [ ${#MISSING_TOOLS[@]} -ne 0 ]; then
+          echo "ERROR: Missing critical tools in baked image:"
+          printf '%s\n' "${MISSING_TOOLS[@]}"
+          echo "Please update the Dockerfile to include these tools."
+          exit 1
+        else
+          echo "SUCCESS: All critical tools are available in the baked image"
+        fi
+
+      # Install any additional tools based on runner types
+      - |
+        # Convert comma-separated string to array
+        IFS=',' read -ra RUNNER_TYPE_ARRAY <<< "$RUNNER_TYPES"
+
+        echo "Setting up environments for runner types: ${RUNNER_TYPE_ARRAY[@]}"
+
+        for runner_type in "${RUNNER_TYPE_ARRAY[@]}"; do
+          echo "Setting up environment for: $runner_type"
+          case $runner_type in
+            "python-app")
+              echo "Setting up Python environment"
+              python3 --version
+              pip3 --version
+
+              # Verify Python-specific tools
+              echo "Verifying Python tools..."
+              if ! python3 -c "import sys; print(f'Python {sys.version}')" &> /dev/null; then
+                echo "ERROR: Python is not working correctly"
+                exit 1
+              fi
+              if ! pip3 list &> /dev/null; then
+                echo "ERROR: Pip is not working correctly"
+                exit 1
+              fi
+              echo "Python environment verified successfully"
+              ;;
+            "nodejs-api")
+              echo "Setting up Node.js environment"
+              node --version
+              npm --version
+
+              # Verify Node.js-specific tools
+              echo "Verifying Node.js tools..."
+              if ! node -e "console.log('Node.js version:', process.version)" &> /dev/null; then
+                echo "ERROR: Node.js is not working correctly"
+                exit 1
+              fi
+              if ! npm list &> /dev/null; then
+                echo "ERROR: NPM is not working correctly"
+                exit 1
+              fi
+              echo "Node.js environment verified successfully"
+              ;;
+            "terraform-infra")
+              echo "Setting up Terraform environment"
+              terraform --version
+              tflint --version
+
+              # Verify Terraform-specific tools
+              echo "Verifying Terraform tools..."
+              if ! terraform version &> /dev/null; then
+                echo "ERROR: Terraform is not working correctly"
+                exit 1
+              fi
+              if ! tflint --version &> /dev/null; then
+                echo "ERROR: TFLint is not working correctly"
+                exit 1
+              fi
+              echo "Terraform environment verified successfully"
+              ;;
+            "react-frontend")
+              echo "Setting up React/Node.js environment"
+              node --version
+              npm --version
+              npx --version
+
+              # Verify React/Node.js-specific tools
+              echo "Verifying React/Node.js tools..."
+              if ! node -e "console.log('Node.js version:', process.version)" &> /dev/null; then
+                echo "ERROR: Node.js is not working correctly"
+                exit 1
+              fi
+              if ! npm list &> /dev/null; then
+                echo "ERROR: NPM is not working correctly"
+                exit 1
+              fi
+              if ! npx --version &> /dev/null; then
+                echo "ERROR: NPX is not working correctly"
+                exit 1
+              fi
+              echo "React/Node.js environment verified successfully"
+              ;;
+            *)
+              echo "Unknown runner type: $runner_type"
+              ;;
+          esac
+        done
+
+        echo "All runner type environments have been set up and verified"
+
+  build:
+    commands:
+      - echo "Running build phase"
+      - echo "This is a GitHub Actions runner - actual workflow execution happens in GitHub"
+      - echo "CodeBuild is acting as a self-hosted runner for types: $RUNNER_TYPES"
+
+      # Example: Run specific tasks based on runner types
+      - |
+        # Convert comma-separated string to array
+        IFS=',' read -ra RUNNER_TYPE_ARRAY <<< "$RUNNER_TYPES"
+
+        echo "Running tasks for runner types: ${RUNNER_TYPE_ARRAY[@]}"
+
+        for runner_type in "${RUNNER_TYPE_ARRAY[@]}"; do
+          echo "Running tasks for: $runner_type"
+          case $runner_type in
+            "python-app")
+              echo "Running Python-specific tasks"
+              # Add Python-specific commands here
+              ;;
+            "nodejs-api")
+              echo "Running Node.js-specific tasks"
+              # Add Node.js-specific commands here
+              ;;
+            "terraform-infra")
+              echo "Running Terraform-specific tasks"
+              # Add Terraform-specific commands here
+              ;;
+            "react-frontend")
+              echo "Running React/Node.js-specific tasks"
+              # Add React/Node.js-specific commands here
+              ;;
+          esac
+        done
+
+        echo "All runner type tasks completed"
+
+  post_build:
+    commands:
+      - echo "=== FINAL VERIFICATION ==="
+      - |
+        echo "Final verification of all tools..."
+        echo "Python: $(python3 --version 2>/dev/null || echo 'FAILED')"
+        echo "Node.js: $(node --version 2>/dev/null || echo 'FAILED')"
+        echo "AWS CLI: $(aws --version 2>/dev/null || echo 'FAILED')"
+        echo "Terraform: $(terraform --version 2>/dev/null || echo 'FAILED')"
+        echo "Docker: $(docker --version 2>/dev/null || echo 'FAILED')"
+        echo "Git: $(git --version 2>/dev/null || echo 'FAILED')"
+
+      - echo "Build completed successfully"
+      - echo "Runner types: $RUNNER_TYPES"
+      - echo "Primary runner type: $PRIMARY_RUNNER_TYPE"
+      - echo "Build completed at: $(date)"
+      - echo "All tools verified and ready for GitHub Actions workflows"
+
+artifacts:
+  files:
+    - '**/*'
+  name: $RUNNER_TYPE-runner-$CODEBUILD_BUILD_NUMBER

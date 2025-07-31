@@ -94,3 +94,56 @@ variable "buildspec_path" {
   type        = string
   default     = "container-codebuild-image/buildspec.yml" # Default for Docker image build
 }
+
+variable "enable_github_actions_runner" {
+  description = "Enable this CodeBuild project as a GitHub Actions runner"
+  type        = bool
+  default     = false
+}
+
+variable "github_owner" {
+  description = "GitHub repository owner (user or organization)"
+  type        = string
+  default     = ""
+}
+
+variable "github_repo" {
+  description = "GitHub repository name"
+  type        = string
+  default     = ""
+}
+
+variable "github_branch" {
+  description = "GitHub branch to monitor for webhooks"
+  type        = string
+  default     = "main"
+}
+
+variable "webhook_enabled" {
+  description = "Enable webhook for automatic builds on code changes"
+  type        = bool
+  default     = false
+}
+
+variable "webhook_filter_groups" {
+  description = "Filter groups for webhook events"
+  type = list(list(object({
+    type                 = string
+    pattern              = string
+    exclude_matched_pattern = bool
+  })))
+  default = [
+    [
+      {
+        type                 = "EVENT"
+        pattern              = "PUSH"
+        exclude_matched_pattern = false
+      },
+      {
+        type                 = "HEAD_REF"
+        pattern              = "refs/heads/main"
+        exclude_matched_pattern = false
+      }
+    ]
+  ]
+}
