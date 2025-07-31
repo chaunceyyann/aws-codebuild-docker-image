@@ -12,8 +12,11 @@ RUN dnf update -y && \
     python3-pip \
     curl \
     wget \
-    yq \
     && yum clean all
+
+# Install latest YQ dynamically
+RUN curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
 
 # Display OS release information
 RUN cat /etc/os-release
