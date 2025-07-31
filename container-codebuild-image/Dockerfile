@@ -1,6 +1,6 @@
 FROM amazonlinux:2023
 
-# Install basic utilities
+# Install basic utilities and Python 3.11
 RUN dnf update -y && \
     dnf install -y \
     tar \
@@ -8,10 +8,12 @@ RUN dnf update -y && \
     unzip \
     git \
     jq \
-    python3 \
-    python3-pip \
+    python3.11 \
+    python3.11-pip \
     wget \
-    && yum clean all
+    && yum clean all && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
 
 # Install latest YQ dynamically
 RUN curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && \
@@ -57,8 +59,7 @@ RUN curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash - && \
     dnf clean all
 
 # Install Python packages
-RUN pip3 install --upgrade pip && \
-    pip3 install boto3 requests
+RUN pip3 install boto3 requests
 
 # Install Go (latest)
 RUN curl -fsSL https://go.dev/dl/$(curl -s https://go.dev/dl/ | grep -o 'go[0-9]\+\.[0-9]\+\.[0-9]\+\.linux-amd64\.tar\.gz' | head -1) -o go.tar.gz && \
