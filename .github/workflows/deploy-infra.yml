@@ -14,6 +14,62 @@ on:
         default: false
         type: boolean
 
+      environment:
+        description: 'Target environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+      deployment_type:
+        description: 'Type of deployment'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - incremental
+          - rollback
+
+      aws_region:
+        description: 'AWS region for deployment'
+        required: false
+        default: 'us-east-1'
+        type: string
+
+      custom_tags:
+        description: 'Custom tags to apply (comma-separated key=value pairs)'
+        required: false
+        default: 'project=aws-codebuild-docker-image,managed-by=terraform'
+        type: string
+
+      dry_run:
+        description: 'Perform a dry run without making changes'
+        required: false
+        default: true
+        type: boolean
+
+      notification_email:
+        description: 'Email address for deployment notifications'
+        required: false
+        default: 'devops@company.com'
+        type: string
+
+      timeout_minutes:
+        description: 'Deployment timeout in minutes'
+        required: false
+        default: '30'
+        type: number
+
+      force_deploy:
+        description: 'Force deployment even if there are warnings'
+        required: false
+        default: false
+        type: boolean
+
 jobs:
   DeployECRAndCodeBuild:
     runs-on: ubuntu-latest
