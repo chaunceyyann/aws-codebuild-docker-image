@@ -20,29 +20,21 @@ RUN cat /etc/os-release
 RUN curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
 
-
-
 # Install AWS CLI v2 (latest)
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
     rm -rf aws awscliv2.zip
 
-# Install latest Terraform dynamically
 RUN curl -fsSL https://releases.hashicorp.com/terraform/$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r '.current_version')/terraform_$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r '.current_version')_linux_amd64.zip -o terraform.zip && \
     unzip terraform.zip -d /usr/local/bin && \
     chmod +x /usr/local/bin/terraform && \
     rm terraform.zip
 
-# Install latest TFLint dynamically
 RUN curl -fsSL https://github.com/terraform-linters/tflint/releases/latest/download/tflint_linux_amd64.zip -o tflint.zip && \
     unzip tflint.zip -d /usr/local/bin && \
     chmod +x /usr/local/bin/tflint && \
     rm tflint.zip
-
-
-
-
 
 # Install GitHub CLI (latest)
 RUN curl -fsSL https://github.com/cli/cli/releases/latest/download/gh_$(curl -s https://api.github.com/repos/cli/cli/releases/latest | jq -r '.tag_name' | sed 's/v//')_linux_amd64.tar.gz | tar -xz && \
