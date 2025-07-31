@@ -157,7 +157,13 @@ resource "aws_codebuild_project" "build" {
     git_submodules_config {
       fetch_submodules = false
     }
+
+    # Note: Authentication is handled via webhook configuration
+    # OAuth token is stored in Secrets Manager for webhook access
   }
+
+  # Note: GitHub Actions runner configuration is handled via webhooks and IAM permissions
+  # The CodeBuild project will be available as a runner when webhook is enabled
 
   logs_config {
     cloudwatch_logs {
@@ -174,6 +180,24 @@ resource "aws_codebuild_project" "build" {
   tags = {
     Name    = var.project_name
     Project = "docker-image-4codebuild"
+  }
+}
+
+# Webhook for automatic builds
+resource "aws_codebuild_webhook" "main" {
+  count = var.webhook_enabled ? 1 : 0
+
+  project_name = aws_codebuild_project.build.name
+
+  filter_group {
+    dynamic "filter" {
+      for_each = var.webhook_filter_groups[0]
+      content {
+        type                    = filter.value.type
+        pattern                 = filter.value.pattern
+        exclude_matched_pattern = filter.value.exclude_matched_pattern
+      }
+    }
   }
 }
 
