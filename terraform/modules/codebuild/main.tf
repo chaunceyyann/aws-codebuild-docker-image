@@ -190,13 +190,16 @@ resource "aws_codebuild_webhook" "main" {
 
   project_name = aws_codebuild_project.build.name
 
-  filter_group {
-    dynamic "filter" {
-      for_each = var.webhook_filter_groups[0]
-      content {
-        type                    = filter.value.type
-        pattern                 = filter.value.pattern
-        exclude_matched_pattern = filter.value.exclude_matched_pattern
+  dynamic "filter_group" {
+    for_each = length(var.webhook_filter_groups) > 0 ? var.webhook_filter_groups : []
+    content {
+      dynamic "filter" {
+        for_each = filter_group.value
+        content {
+          type                    = filter.value.type
+          pattern                 = filter.value.pattern
+          exclude_matched_pattern = filter.value.exclude_matched_pattern
+        }
       }
     }
   }

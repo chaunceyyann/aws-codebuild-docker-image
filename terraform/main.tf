@@ -139,28 +139,7 @@ module "codebuild_runners" {
     [
       {
         type                 = "EVENT"
-        pattern              = "PULL_REQUEST_CREATED"
-        exclude_matched_pattern = false
-      }
-    ],
-    [
-      {
-        type                 = "EVENT"
-        pattern              = "PULL_REQUEST_UPDATED"
-        exclude_matched_pattern = false
-      }
-    ],
-    [
-      {
-        type                 = "EVENT"
-        pattern              = "PULL_REQUEST_REOPENED"
-        exclude_matched_pattern = false
-      }
-    ],
-    [
-      {
-        type                 = "EVENT"
-        pattern              = "PULL_REQUEST_SYNCHRONIZE"
+        pattern              = "WORKFLOW_JOB_QUEUED"
         exclude_matched_pattern = false
       }
     ]
