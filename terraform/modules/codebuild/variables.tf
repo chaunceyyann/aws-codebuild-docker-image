@@ -95,11 +95,8 @@ variable "buildspec_path" {
   default     = "container-codebuild-image/buildspec.yml" # Default for Docker image build
 }
 
-variable "enable_github_actions_runner" {
-  description = "Enable this CodeBuild project as a GitHub Actions runner"
-  type        = bool
-  default     = false
-}
+# Note: GitHub Actions runner functionality is enabled via webhook configuration
+# The enable_github_actions_runner variable is not needed for basic webhook setup
 
 variable "github_owner" {
   description = "GitHub repository owner (user or organization)"

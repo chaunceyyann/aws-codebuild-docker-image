@@ -158,25 +158,12 @@ resource "aws_codebuild_project" "build" {
       fetch_submodules = false
     }
 
-    # GitHub Actions runner configuration
-    dynamic "auth" {
-      for_each = var.enable_github_actions_runner ? [1] : []
-      content {
-        type     = "OAUTH"
-        resource = data.aws_secretsmanager_secret.github_token.arn
-      }
-    }
+    # Note: Authentication is handled via webhook configuration
+    # OAuth token is stored in Secrets Manager for webhook access
   }
 
-  # GitHub Actions runner configuration
-  dynamic "github_actions_config" {
-    for_each = var.enable_github_actions_runner ? [1] : []
-    content {
-      github_token = data.aws_secretsmanager_secret.github_token.arn
-      owner        = var.github_owner
-      repository   = var.github_repo
-    }
-  }
+  # Note: GitHub Actions runner configuration is handled via webhooks and IAM permissions
+  # The CodeBuild project will be available as a runner when webhook is enabled
 
   logs_config {
     cloudwatch_logs {

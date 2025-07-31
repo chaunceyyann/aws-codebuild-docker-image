@@ -126,8 +126,7 @@ module "codebuild_runners" {
   buildspec_path        = "buildspecs/runner.yml"
   ecr_repo_name         = var.ecr_repo_name
 
-  # GitHub Actions runner configuration
-  enable_github_actions_runner = true
+  # GitHub repository configuration
   github_owner                 = each.value.owner
   github_repo                  = each.value.name
   github_branch                = each.value.branch
@@ -148,7 +147,7 @@ module "codebuild_runners" {
       },
       {
         type                 = "HEAD_REF"
-        pattern              = "refs/heads/develop"
+        pattern              = "refs/heads/dev"
         exclude_matched_pattern = false
       }
     ]
