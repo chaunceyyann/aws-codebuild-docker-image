@@ -7,6 +7,19 @@ on:
       - completed
   schedule:
     - cron: '0 0 * * 0'  # Run once every week on Sunday at midnight
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      force_build:
+        description: 'Force build even if image already exists'
+        required: false
+        default: false
+        type: boolean
+
+      custom_version:
+        description: 'Custom version to build (leave empty for default)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   actions: read    # Add permissions to read workflow runs
@@ -16,8 +29,8 @@ jobs:
   BuildDockerImage:
     runs-on: ubuntu-latest
     env:
-      # Single place to update the version
-      BASE_IMAGE_VERSION: "1.0.1"
+      # Use custom version if provided, otherwise use default
+      BASE_IMAGE_VERSION: ${{ github.event.inputs.custom_version || '1.0.1' }}
     steps:
       - name: Check Workflow Trigger
         if: github.event_name == 'workflow_run'

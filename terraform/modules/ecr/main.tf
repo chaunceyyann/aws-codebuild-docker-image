@@ -38,16 +38,15 @@ resource "aws_ecr_lifecycle_policy" "this" {
   })
 }
 
-# ECR Repository Policy to allow CodeBuild to pull images
-resource "aws_ecr_repository_policy" "this" {
+resource "aws_ecr_repository_policy" "codebuild_service_pull" {
   repository = aws_ecr_repository.this.name
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2008-10-17",
     Statement = [
       {
-        Sid    = "AllowCodeBuildPull"
-        Effect = "Allow"
+        Sid      = "AllowCodeBuildServicePull"
+        Effect   = "Allow"
         Principal = {
           Service = "codebuild.amazonaws.com"
         }
@@ -56,7 +55,6 @@ resource "aws_ecr_repository_policy" "this" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchCheckLayerAvailability"
         ]
-        Resource = aws_ecr_repository.this.arn
       }
     ]
   })

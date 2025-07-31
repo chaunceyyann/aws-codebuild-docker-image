@@ -7,18 +7,13 @@ FROM ${ECR_REPO_URL}:latest
 # Display OS release information
 RUN cat /etc/os-release
 
-# Install Node.js 18.x
-RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash - && \
-    yum install -y nodejs && \
-    yum clean all
-
-# Install Grype (vulnerability scanner)
-RUN curl -fsSL https://github.com/anchore/grype/releases/download/v0.73.0/grype_0.73.0_linux_amd64.tar.gz | \
+# Install latest Grype (vulnerability scanner)
+RUN curl -fsSL https://github.com/anchore/grype/releases/latest/download/grype_$(curl -s https://api.github.com/repos/anchore/grype/releases/latest | jq -r '.tag_name' | sed 's/v//')_linux_amd64.tar.gz | \
     tar -xzC /usr/local/bin grype && \
     chmod +x /usr/local/bin/grype
 
-# Install Trivy (vulnerability scanner)
-RUN curl -fsSL https://github.com/aquasecurity/trivy/releases/download/v0.50.0/trivy_0.50.0_Linux-64bit.tar.gz | \
+# Install latest Trivy (vulnerability scanner)
+RUN curl -fsSL https://github.com/aquasecurity/trivy/releases/latest/download/trivy_$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | jq -r '.tag_name' | sed 's/v//')_Linux-64bit.tar.gz | \
     tar -xzC /usr/local/bin trivy && \
     chmod +x /usr/local/bin/trivy
 
@@ -32,9 +27,10 @@ RUN echo "Verifying installations..." && \
     echo "tflint version: $(tflint --version)" && \
     echo "Docker version: $(docker --version)" && \
     echo "Docker Compose version: $(docker-compose --version)" && \
-    echo "\nScanner image tools:" && \
+    echo "GitHub CLI version: $(gh --version)" && \
     echo "Node.js version: $(node --version)" && \
     echo "npm version: $(npm --version)" && \
+    echo "\nScanner image tools:" && \
     echo "Grype version: $(grype --version)" && \
     echo "Trivy version: $(trivy --version)"
 

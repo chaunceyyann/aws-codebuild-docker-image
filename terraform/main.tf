@@ -77,6 +77,7 @@ module "codebuild_docker" {
   description           = "CodeBuild project for building base Docker image with development tools"
   buildspec_path        = "container-codebuild-image/buildspec.yml" # Path for Docker image build
   ecr_repo_name         = var.ecr_repo_name                         # Use the input variable for base repo name
+  privileged_mode       = true                                      # Enable Docker-in-Docker for building images
 
   depends_on = [module.ecr]
 }
@@ -96,6 +97,7 @@ module "codebuild_scanner" {
   description           = "CodeBuild project for running security scans using custom Docker image"
   buildspec_path        = "container-static-code-scan/buildspec.yml" # Path for scanner build
   ecr_repo_name         = "code-scanner-4codebuild-repo"             # Use the hardcoded name for scanner repo (matches input to ecr_scanner)
+  privileged_mode       = true                                        # Enable Docker-in-Docker for building images
   environment_variables = [
     {
       name  = "SCAN_TYPE"

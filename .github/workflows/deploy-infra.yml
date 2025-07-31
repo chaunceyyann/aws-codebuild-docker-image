@@ -3,7 +3,7 @@
 name: Deploy AWS Infrastructure
 
 on:
-  push:
+  pull_request:
     branches:
       - master
   workflow_dispatch: # Allow manual trigger
