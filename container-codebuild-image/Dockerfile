@@ -11,6 +11,7 @@ RUN dnf update -y && \
     python3.11 \
     python3.11-pip \
     wget \
+    libicu \
     && dnf clean all
 
 # Display OS release iformation
