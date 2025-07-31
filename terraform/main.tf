@@ -139,30 +139,6 @@ module "codebuild_runners" {
     [
       {
         type                 = "EVENT"
-        pattern              = "PUSH"
-        exclude_matched_pattern = false
-      },
-      {
-        type                 = "HEAD_REF"
-        pattern              = "refs/heads/${each.value.branch}"
-        exclude_matched_pattern = false
-      }
-    ],
-    [
-      {
-        type                 = "EVENT"
-        pattern              = "PUSH"
-        exclude_matched_pattern = false
-      },
-      {
-        type                 = "HEAD_REF"
-        pattern              = "refs/heads/dev"
-        exclude_matched_pattern = false
-      }
-    ],
-    [
-      {
-        type                 = "EVENT"
         pattern              = "PULL_REQUEST_CREATED"
         exclude_matched_pattern = false
       }
