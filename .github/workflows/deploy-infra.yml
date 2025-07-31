@@ -7,6 +7,12 @@ on:
     branches:
       - master
   workflow_dispatch: # Allow manual trigger
+    inputs:
+      apply_changes:
+        description: 'Apply Terraform changes after plan'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   DeployECRAndCodeBuild:
@@ -44,7 +50,7 @@ jobs:
           terraform init -upgrade
 
       - name: Terraform Plan
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         run: |
           cd terraform
           terraform plan -no-color \
@@ -56,7 +62,7 @@ jobs:
             -var="scanner_image_version=${{ env.SCANNER_IMAGE_VERSION }}"
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' || (github.event_name == 'workflow_dispatch' && inputs.apply_changes == true)
         run: |
           cd terraform
           terraform apply -auto-approve \
