@@ -45,7 +45,6 @@ output "github_actions_runners" {
     for repo_name, runner in module.codebuild_runners : repo_name => {
       project_name = runner.project_name
       project_arn  = runner.project_arn
-      description  = runner.description
     }
   }
 }
