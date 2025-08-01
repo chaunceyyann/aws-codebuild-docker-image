@@ -1,0 +1,39 @@
+# PR Commenter App Configuration
+# This file configures the PR Status Commenter App
+
+# Required checks that must pass for a success comment
+required_checks:
+  - pre-commit
+  - terraform-lint
+
+# Comment templates
+success_comment: |
+  ✅ **All PR checks passed successfully!**
+
+  🎉 Great job! All automated checks have completed successfully:
+  - ✅ Pre-commit checks
+  - ✅ Terraform linting
+
+  This PR is ready for review! 🚀
+
+  *This comment was automatically posted by the PR Status Commenter App.*
+
+failure_comment: |
+  ❌ **Some PR checks failed**
+
+  Please review the failed checks and fix any issues before requesting a review.
+
+  You can view the detailed results in the [Checks tab](https://github.com/${{ github.repository }}/pull/${{ pr_number }}/checks).
+
+  *This comment was automatically posted by the PR Status Commenter App.*
+
+# Settings
+settings:
+  # Only post one comment per PR (prevents spam)
+  prevent_duplicate_comments: true
+
+  # Include links to check results
+  include_check_links: true
+
+  # Customize the bot name in comments
+  bot_name: "PR Status Commenter App"

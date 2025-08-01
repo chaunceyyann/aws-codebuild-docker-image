@@ -18,3 +18,39 @@ jobs:
       working-directory: '.'
       fetch-depth: '0'
       codebuild-runner: 'aws-codebuild-docker-image-runner'
+
+  post-comment:
+    needs: [pre-commit, terraform-lint]
+    if: needs.pre-commit.result == 'success' && needs.terraform-lint.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Success Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            // Check if we already posted a success comment
+            const existingComment = comments.find(comment =>
+              comment.user.login === 'github-actions[bot]' &&
+              comment.body.includes('✅ All PR checks passed successfully!')
+            );
+
+            if (!existingComment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `✅ **All PR checks passed successfully!**
+
+                🎉 Great job! All automated checks have completed successfully:
+                - ✅ Pre-commit checks
+                - ✅ Terraform linting
+
+                This PR is ready for review! 🚀`
+              });
+            }
