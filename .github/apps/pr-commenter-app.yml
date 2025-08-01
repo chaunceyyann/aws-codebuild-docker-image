@@ -1,0 +1,19 @@
+name: "PR Commenter App"
+description: "Automatically posts comments on PRs when checks pass"
+default_permissions:
+  issues: write
+  pull_requests: write
+  contents: read
+  checks: read
+  statuses: read
+
+# Events the app listens to
+default_events:
+  - pull_request
+  - check_suite
+  - check_run
+
+# Optional: Set to true if you want the app to be installed on all repositories
+# by default when someone installs it
+installations:
+  single_file_name: .github/pr-commenter.yml
