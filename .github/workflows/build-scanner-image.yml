@@ -6,9 +6,6 @@ on:
     types:
       - completed
   workflow_dispatch:  # Manual triggerr
-  push:
-    paths:
-      - 'container-static-code-scan/**'
 
 permissions:
   actions: read
