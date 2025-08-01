@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [master, dev]
 
+permissions:
+  issues: write
+  pull-requests: write
+  checks: read
+  contents: read
+
 jobs:
   pre-commit:
     uses: chaunceyyann/cyan-actions/.github/workflows/reusable-pre-commit.yml@dev

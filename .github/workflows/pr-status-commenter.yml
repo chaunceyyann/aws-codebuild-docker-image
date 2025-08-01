@@ -6,6 +6,12 @@ on:
   check_run:
     types: [completed]
 
+permissions:
+  issues: write
+  pull-requests: write
+  checks: read
+  contents: read
+
 jobs:
   comment-on-pr:
     runs-on: ubuntu-latest
