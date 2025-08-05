@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Starting GitHub Actions runner build..."
+
+  build:
+    commands:
+      - echo "Build completed successfully"
+
+  post_build:
+    commands:
+      - echo "GitHub Actions runner build completed"
+
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: no

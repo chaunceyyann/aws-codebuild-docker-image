@@ -7,39 +7,144 @@ locals {
       name        = "cyan-actions"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for cyan-actions repository"
-      runner_types = ["python-app", "nodejs-api", "terraform-infra"]  # Multiple types
       branch      = "main"
     },
     {
       name        = "aws-codebuild-docker-image"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for aws-codebuild-docker-image repository"
-      runner_types = ["terraform-infra"]  # Single type
       branch      = "main"
     },
     {
       name        = "comfyui-image-processing-nodes"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for comfyui-image-processing-nodes repository"
-      runner_types = ["python-app"]  # Single type
       branch      = "main"
     },
     {
       name        = "BJST"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for BJST repository"
-      runner_types = ["react-frontend"]  # Single type
       branch      = "main"
     },
     {
       name        = "aws-imagebuilder-image"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for aws-imagebuilder-image repository"
-      runner_types = ["terraform-infra"]  # Single type
       branch      = "main"
     }
   ]
 }
+
+# Shared resources for CodeBuild
+resource "aws_iam_role" "codebuild_role" {
+  name = "shared-codebuild-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "codebuild.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "codebuild_policy" {
+  role = aws_iam_role.codebuild_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchDeleteImage",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages"
+        ]
+        Resource = [
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/docker-image-4codebuild-repo",
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/code-scanner-4codebuild-repo",
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeDhcpOptions",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeVpcs",
+          "ec2:CreateNetworkInterfacePermission",
+          "ec2:AttachNetworkInterface"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = data.aws_secretsmanager_secret.github_token.arn
+      }
+    ]
+  })
+}
+
+resource "aws_security_group" "codebuild_sg" {
+  name        = "shared-codebuild-sg"
+  description = "Shared security group for all CodeBuild projects"
+  vpc_id      = module.vpc.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "shared-codebuild-sg"
+  }
+}
+
+data "aws_secretsmanager_secret" "github_token" {
+  name = "codebuild/github-oauth-token"
+}
+
+data "aws_caller_identity" "current" {}
 
 module "ecr" {
   source = "./modules/ecr"
@@ -78,6 +183,8 @@ module "codebuild_docker" {
   buildspec_path        = "container-codebuild-image/buildspec.yml" # Path for Docker image build
   ecr_repo_name         = var.ecr_repo_name                         # Use the input variable for base repo name
   privileged_mode       = true                                      # Enable Docker-in-Docker for building images
+  codebuild_role_arn    = aws_iam_role.codebuild_role.arn
+  codebuild_sg_id       = aws_security_group.codebuild_sg.id
 
   depends_on = [module.ecr]
 }
@@ -98,6 +205,8 @@ module "codebuild_scanner" {
   buildspec_path        = "container-static-code-scan/buildspec.yml" # Path for scanner build
   ecr_repo_name         = "code-scanner-4codebuild-repo"             # Use the hardcoded name for scanner repo (matches input to ecr_scanner)
   privileged_mode       = true                                        # Enable Docker-in-Docker for building images
+  codebuild_role_arn    = aws_iam_role.codebuild_role.arn
+  codebuild_sg_id       = aws_security_group.codebuild_sg.id
   environment_variables = [
     {
       name  = "SCAN_TYPE"
@@ -122,16 +231,13 @@ module "codebuild_runners" {
   private_subnet_ids    = module.vpc.private_subnet_ids
   ecr_repo_url          = module.ecr.repository_url
   image_version         = "1.0.0"
-  image                 = "${module.ecr.repository_url}:latest"
+  image                 = "aws/codebuild/amazonlinux-x86_64-standard:5.0"
   source_repository_url = "https://github.com/${each.value.owner}/${each.value.name}"
   description           = each.value.description
-  buildspec_path        = "buildspecs/runner.yml"
+  buildspec_path        = "buildspecs/gha_buildspec_minimal.yml"
   ecr_repo_name         = var.ecr_repo_name
-
-  # GitHub repository configuration
-  github_owner                 = each.value.owner
-  github_repo                  = each.value.name
-  github_branch                = each.value.branch
+  codebuild_role_arn    = aws_iam_role.codebuild_role.arn
+  codebuild_sg_id       = aws_security_group.codebuild_sg.id
 
   # Enable webhook for automatic builds
   webhook_enabled = true
@@ -139,17 +245,7 @@ module "codebuild_runners" {
     [
       {
         type                 = "EVENT"
-        pattern              = "PUSH"
-        exclude_matched_pattern = false
-      },
-      {
-        type                 = "HEAD_REF"
-        pattern              = "refs/heads/${each.value.branch}"
-        exclude_matched_pattern = false
-      },
-      {
-        type                 = "HEAD_REF"
-        pattern              = "refs/heads/dev"
+        pattern              = "WORKFLOW_JOB_QUEUED"
         exclude_matched_pattern = false
       }
     ]
@@ -159,18 +255,7 @@ module "codebuild_runners" {
   compute_type     = "BUILD_GENERAL1_MEDIUM"
   privileged_mode  = false
 
-  environment_variables = [
-    {
-      name  = "RUNNER_TYPES"
-      value = join(",", each.value.runner_types)
-      type  = "PLAINTEXT"
-    },
-    {
-      name  = "PRIMARY_RUNNER_TYPE"
-      value = each.value.runner_types[0]
-      type  = "PLAINTEXT"
-    }
-  ]
+  environment_variables = []
 
   depends_on = [module.ecr]
 }
@@ -193,6 +278,8 @@ module "codebuild_yaml_validator" {
   environment_type      = "LINUX_CONTAINER"
   compute_type          = "BUILD_GENERAL1_MEDIUM" # Medium compute for runner tasks
   privileged_mode       = false                   # No Docker needed for this runner
+  codebuild_role_arn    = aws_iam_role.codebuild_role.arn
+  codebuild_sg_id       = aws_security_group.codebuild_sg.id
   environment_variables = [
     {
       name  = "RUNNER_TYPE"
