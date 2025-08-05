@@ -1,65 +1,77 @@
+# terraform/modules/codebuild/variables.tf
+
 variable "project_name" {
-  description = "Name of the CodeBuild project"
+  description = "The name of the CodeBuild project."
   type        = string
 }
 
+variable "description" {
+  description = "A description of the CodeBuild project."
+  type        = string
+  default     = ""
+}
+
 variable "aws_region" {
-  description = "AWS region for resources"
+  description = "The AWS region for the CodeBuild project."
   type        = string
 }
 
 variable "ecr_repository_arn" {
-  description = "ARN of the ECR repository"
+  description = "The ARN of the ECR repository."
   type        = string
 }
 
 variable "vpc_id" {
-  description = "ID of the VPC"
+  description = "The ID of the VPC."
   type        = string
 }
 
 variable "private_subnet_ids" {
-  description = "List of private subnet IDs"
+  description = "A list of private subnet IDs."
   type        = list(string)
 }
 
 variable "ecr_repo_url" {
-  description = "URL of the ECR repository"
+  description = "The URL of the ECR repository."
   type        = string
 }
 
-variable "environment_type" {
-  description = "Type of build environment"
+variable "image_version" {
+  description = "The version of the Docker image."
   type        = string
-  default     = "LINUX_CONTAINER"
-}
-
-variable "compute_type" {
-  description = "Information about the compute resources the build project will use"
-  type        = string
-  default     = "BUILD_GENERAL1_SMALL"
 }
 
 variable "image" {
-  description = "Docker image to use for this build project"
+  description = "The Docker image to use for the build environment."
+  type        = string
+  default     = "aws/codebuild/amazonlinux-x86_64-standard:5.0"
+}
+
+variable "source_repository_url" {
+  description = "The URL of the source repository."
   type        = string
 }
 
-variable "image_pull_credentials_type" {
-  description = "Type of credentials AWS CodeBuild uses to pull images"
+variable "buildspec_path" {
+  description = "The path to the buildspec file."
   type        = string
-  default     = "CODEBUILD"
+  default     = "buildspecs/gha_buildspec_minimal.yml"
+}
+
+variable "ecr_repo_name" {
+  description = "The name of the ECR repository."
+  type        = string
 }
 
 variable "privileged_mode" {
-  description = "If true, enables running the Docker daemon inside a Docker container"
+  description = "Whether to enable privileged mode for the build container."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "environment_variables" {
-  description = "Additional environment variables to add to the build environment"
-  type = list(object({
+  description = "A list of environment variables for the build project."
+  type        = list(object({
     name  = string
     value = string
     type  = string
@@ -67,80 +79,42 @@ variable "environment_variables" {
   default = []
 }
 
-variable "source_repository_url" {
-  description = "URL of the GitHub repository"
-  type        = string
-}
-
-variable "description" {
-  description = "Description of the CodeBuild project"
-  type        = string
-  default     = "CodeBuild project"
-}
-
-variable "image_version" {
-  description = "Version of the Docker image to build"
-  type        = string
-}
-
-variable "ecr_repo_name" {
-  description = "Name of the ECR repository"
-  type        = string
-  default     = "docker-image-4codebuild-repo"
-}
-
-variable "buildspec_path" {
-  description = "Path to the buildspec file relative to the Terraform root or module directory"
-  type        = string
-  default     = "container-codebuild-image/buildspec.yml" # Default for Docker image build
-}
-
-# Note: GitHub Actions runner functionality is enabled via webhook configuration
-# The enable_github_actions_runner variable is not needed for basic webhook setup
-
-variable "github_owner" {
-  description = "GitHub repository owner (user or organization)"
-  type        = string
-  default     = ""
-}
-
-variable "github_repo" {
-  description = "GitHub repository name"
-  type        = string
-  default     = ""
-}
-
-variable "github_branch" {
-  description = "GitHub branch to monitor for webhooks"
-  type        = string
-  default     = "main"
-}
-
 variable "webhook_enabled" {
-  description = "Enable webhook for automatic builds on code changes"
+  description = "Whether to enable the webhook for the CodeBuild project."
   type        = bool
   default     = false
 }
 
 variable "webhook_filter_groups" {
-  description = "Filter groups for webhook events"
-  type = list(list(object({
-    type                 = string
-    pattern              = string
-    exclude_matched_pattern = bool
-  })))
-  default = [
-    [
-      {
-        type                 = "EVENT"
-        pattern              = "PUSH"
-        exclude_matched_pattern = false
-      },
-      {
-        type                 = "HEAD_REF"
-        pattern              = "refs/heads/main"
-        exclude_matched_pattern = false
-      }
-    ]
-  ]
+  description = "A list of filter groups for the webhook."
+  type        = any
+  default     = []
+}
+
+variable "environment_type" {
+  description = "The type of environment for the CodeBuild project."
+  type        = string
+  default     = "LINUX_CONTAINER"
+}
+
+variable "compute_type" {
+  description = "The compute type for the CodeBuild project."
+  type        = string
+  default     = "BUILD_GENERAL1_SMALL"
+}
+
+variable "image_pull_credentials_type" {
+  description = "The type of credentials to use to pull the image."
+  type        = string
+  default     = "CODEBUILD"
+}
+
+variable "codebuild_role_arn" {
+  description = "The ARN of the IAM role for CodeBuild."
+  type        = string
+}
+
+variable "codebuild_sg_id" {
+  description = "The ID of the security group for CodeBuild."
+  type        = string
 }
