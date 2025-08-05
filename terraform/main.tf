@@ -224,7 +224,7 @@ module "codebuild_runners" {
   for_each = { for repo in local.github_repos : repo.name => repo }
 
   source                = "./modules/codebuild"
-  project_name          = "${each.value.name}-runner"
+  project_name          = "runner-${each.value.name}"
   aws_region            = var.aws_region
   ecr_repository_arn    = module.ecr.repository_arn
   vpc_id                = module.vpc.vpc_id
