@@ -7,35 +7,30 @@ locals {
       name        = "cyan-actions"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for cyan-actions repository"
-      runner_types = ["python-app", "nodejs-api", "terraform-infra"]  # Multiple types
       branch      = "main"
     },
     {
       name        = "aws-codebuild-docker-image"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for aws-codebuild-docker-image repository"
-      runner_types = ["terraform-infra"]  # Single type
       branch      = "main"
     },
     {
       name        = "comfyui-image-processing-nodes"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for comfyui-image-processing-nodes repository"
-      runner_types = ["python-app"]  # Single type
       branch      = "main"
     },
     {
       name        = "BJST"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for BJST repository"
-      runner_types = ["react-frontend"]  # Single type
       branch      = "main"
     },
     {
       name        = "aws-imagebuilder-image"
       owner       = "chaunceyyann"
       description = "GitHub Actions runner for aws-imagebuilder-image repository"
-      runner_types = ["terraform-infra"]  # Single type
       branch      = "main"
     }
   ]
@@ -236,10 +231,10 @@ module "codebuild_runners" {
   private_subnet_ids    = module.vpc.private_subnet_ids
   ecr_repo_url          = module.ecr.repository_url
   image_version         = "1.0.0"
-  image                 = "${module.ecr.repository_url}:latest"
+  image                 = "aws/codebuild/amazonlinux-x86_64-standard:5.0"
   source_repository_url = "https://github.com/${each.value.owner}/${each.value.name}"
   description           = each.value.description
-  buildspec_path        = "buildspecs/runner.yml"
+  buildspec_path        = "buildspecs/gha_buildspec_minimal.yml"
   ecr_repo_name         = var.ecr_repo_name
   codebuild_role_arn    = aws_iam_role.codebuild_role.arn
   codebuild_sg_id       = aws_security_group.codebuild_sg.id
@@ -260,18 +255,7 @@ module "codebuild_runners" {
   compute_type     = "BUILD_GENERAL1_MEDIUM"
   privileged_mode  = false
 
-  environment_variables = [
-    {
-      name  = "RUNNER_TYPES"
-      value = join(",", each.value.runner_types)
-      type  = "PLAINTEXT"
-    },
-    {
-      name  = "PRIMARY_RUNNER_TYPE"
-      value = each.value.runner_types[0]
-      type  = "PLAINTEXT"
-    }
-  ]
+  environment_variables = []
 
   depends_on = [module.ecr]
 }
