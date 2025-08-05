@@ -69,7 +69,7 @@ variable "webhook_enabled" {
 # Runner for repository "my-python-app"
 module "codebuild_runner_python_app" {
   source                = "./modules/codebuild"
-  project_name          = "my-python-app-runner"
+  project_name          = "runner-my-python-app"
   aws_region            = var.aws_region
   ecr_repository_arn    = module.ecr.repository_arn
   vpc_id                = module.vpc.vpc_id
@@ -171,7 +171,7 @@ on:
 
 jobs:
   test:
-    runs-on: codebuild-my-python-app-runner
+    runs-on: codebuild-runner-my-python-app
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
