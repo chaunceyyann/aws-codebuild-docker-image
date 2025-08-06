@@ -6,26 +6,7 @@ resource "aws_codeartifact_domain" "main" {
   tags = var.tags
 }
 
-# External connection for npm packages
-resource "aws_codeartifact_external_connection" "npm" {
-  domain = aws_codeartifact_domain.main.domain
-  repository = aws_codeartifact_repository.npm.repository
-  external_connection_name = "public:npmjs"
-}
 
-# External connection for pip packages
-resource "aws_codeartifact_external_connection" "pip" {
-  domain = aws_codeartifact_domain.main.domain
-  repository = aws_codeartifact_repository.pip.repository
-  external_connection_name = "public:pypi"
-}
-
-# External connection for Maven packages (for Java tools)
-resource "aws_codeartifact_external_connection" "maven" {
-  domain = aws_codeartifact_domain.main.domain
-  repository = aws_codeartifact_repository.maven.repository
-  external_connection_name = "public:maven-central"
-}
 
 # npm repository for Node.js packages
 resource "aws_codeartifact_repository" "npm" {
@@ -34,7 +15,7 @@ resource "aws_codeartifact_repository" "npm" {
   description = "npm package repository for development tools"
 
   external_connections {
-    external_connection_name = aws_codeartifact_external_connection.npm.external_connection_name
+    external_connection_name = "public:npmjs"
   }
 
   tags = var.tags
@@ -47,7 +28,7 @@ resource "aws_codeartifact_repository" "pip" {
   description = "pip package repository for development tools"
 
   external_connections {
-    external_connection_name = aws_codeartifact_external_connection.pip.external_connection_name
+    external_connection_name = "public:pypi"
   }
 
   tags = var.tags
@@ -60,7 +41,7 @@ resource "aws_codeartifact_repository" "maven" {
   description = "Maven repository for Java-based development tools"
 
   external_connections {
-    external_connection_name = aws_codeartifact_external_connection.maven.external_connection_name
+    external_connection_name = "public:maven-central"
   }
 
   tags = var.tags

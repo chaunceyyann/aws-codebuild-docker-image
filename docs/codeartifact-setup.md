@@ -11,10 +11,10 @@ This document describes the AWS CodeArtifact infrastructure setup for managing s
 The setup creates a CodeArtifact domain with the following repositories:
 
 1. **generic-store**: For binary packages (trivy, grype, semgrep, tflint, terraform)
-2. **pip-store**: For Python packages (checkov, bandit, npm-audit, pip-audit)
-3. **npm-store**: For Node.js packages (npm, node)
-4. **maven-store**: For Java-based tools
-5. **internal-store**: Aggregated repository with upstream connections
+2. **pip-store**: For Python packages (checkov, bandit, npm-audit, pip-audit) - connected to PyPI
+3. **npm-store**: For Node.js packages (npm, node) - connected to npmjs
+4. **maven-store**: For Java-based tools - connected to Maven Central
+5. **internal-store**: Aggregated repository with upstream connections to all other repositories
 
 ### Automated Package Updates
 
