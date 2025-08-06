@@ -190,7 +190,7 @@ resource "null_resource" "build_lambda_package" {
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/build_lambda.sh"
+    command = "bash build_lambda.sh"
     working_dir = path.module
   }
 }
