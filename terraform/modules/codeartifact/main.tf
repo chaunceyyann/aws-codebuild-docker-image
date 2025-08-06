@@ -129,27 +129,7 @@ resource "aws_iam_policy" "codeartifact_access" {
   })
 }
 
-# Lambda function to update package versions
-resource "aws_lambda_function" "package_updater" {
-  filename         = data.archive_file.package_updater.output_path
-  function_name    = "${var.domain_name}-package-updater"
-  role            = aws_iam_role.package_updater.arn
-  handler         = "index.handler"
-  runtime         = "python3.11"
-  timeout         = 300
 
-  environment {
-    variables = {
-      DOMAIN_NAME = aws_codeartifact_domain.main.domain
-      NPM_REPOSITORY = aws_codeartifact_repository.npm.repository
-      PIP_REPOSITORY = aws_codeartifact_repository.pip.repository
-      MAVEN_REPOSITORY = aws_codeartifact_repository.maven.repository
-      GENERIC_REPOSITORY = aws_codeartifact_repository.generic.repository
-    }
-  }
-
-  tags = var.tags
-}
 
 # IAM role for Lambda function
 resource "aws_iam_role" "package_updater" {
@@ -203,12 +183,37 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   source_arn    = aws_cloudwatch_event_rule.package_update_schedule.arn
 }
 
-# Archive file for Lambda function
-data "archive_file" "package_updater" {
-  type        = "zip"
-  output_path = "${path.module}/package_updater.zip"
-  source {
-    content = file("${path.module}/package_updater.py")
-    filename = "index.py"
+# Build Lambda deployment package with dependencies
+resource "null_resource" "build_lambda_package" {
+  triggers = {
+    source_code_hash = filemd5("${path.module}/package_updater.py")
   }
+
+  provisioner "local-exec" {
+    command = "${path.module}/build_lambda.sh"
+    working_dir = path.module
+  }
+}
+
+# Lambda function to update package versions
+resource "aws_lambda_function" "package_updater" {
+  depends_on = [null_resource.build_lambda_package]
+  filename         = "/tmp/package_updater.zip"
+  function_name    = "${var.domain_name}-package-updater"
+  role            = aws_iam_role.package_updater.arn
+  handler         = "index.handler"
+  runtime         = "python3.11"
+  timeout         = 300
+
+  environment {
+    variables = {
+      DOMAIN_NAME = aws_codeartifact_domain.main.domain
+      NPM_REPOSITORY = aws_codeartifact_repository.npm.repository
+      PIP_REPOSITORY = aws_codeartifact_repository.pip.repository
+      MAVEN_REPOSITORY = aws_codeartifact_repository.maven.repository
+      GENERIC_REPOSITORY = aws_codeartifact_repository.generic.repository
+    }
+  }
+
+  tags = var.tags
 }
