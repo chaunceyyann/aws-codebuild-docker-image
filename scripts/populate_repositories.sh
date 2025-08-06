@@ -23,6 +23,19 @@ get_auth_token() {
         --output text
 }
 
+# Function to refresh authentication tokens
+refresh_tokens() {
+    echo "🔄 Refreshing authentication tokens..."
+
+    # Get fresh token for pip
+    export PIP_TOKEN=$(get_auth_token)
+
+    # Refresh npm authentication
+    configure_npm
+
+    echo "✅ Authentication tokens refreshed"
+}
+
 # Function to get repository endpoint
 get_repository_endpoint() {
     local repository=$1
@@ -41,15 +54,30 @@ get_repository_endpoint() {
 configure_npm() {
     echo "📦 Configuring npm for CodeArtifact..."
 
-    local token=$(get_auth_token)
-    local endpoint=$(get_repository_endpoint "npm-store" "npm")
+    # Clear any existing npm configuration
+    npm config delete registry 2>/dev/null || true
+    npm config delete //security-tools-domain-643843550246.d.codeartifact.us-east-1.amazonaws.com:_authToken 2>/dev/null || true
 
-    # Configure npm to use CodeArtifact
-    npm config set registry $endpoint
-    npm config set //$endpoint:_authToken $token
-    npm config set //$endpoint:always-auth true
+    # Use AWS CLI to configure npm for CodeArtifact (this gets a fresh token)
+    aws codeartifact login --tool npm --repository npm-store --domain $DOMAIN_NAME --region $AWS_REGION
 
-    echo "✅ npm configured for CodeArtifact"
+    if [ $? -eq 0 ]; then
+        echo "✅ npm configured for CodeArtifact using AWS CLI"
+    else
+        echo "⚠️  AWS CLI login failed, trying manual configuration..."
+
+        local token=$(get_auth_token)
+        local endpoint=$(get_repository_endpoint "npm-store" "npm")
+
+        # Extract domain from endpoint for proper npm configuration
+        local domain=$(echo $endpoint | sed 's|https://\([^/]*\).*|\1|')
+
+        # Configure npm to use CodeArtifact with proper authentication
+        npm config set registry $endpoint
+        npm config set //$domain:_authToken $token
+
+        echo "✅ npm configured for CodeArtifact manually"
+    fi
 }
 
 # Function to configure pip for CodeArtifact
@@ -73,7 +101,6 @@ populate_npm() {
     # List of npm packages to install
     local packages=(
         "npm@latest"
-        "node@latest"
         "yarn@latest"
         "typescript@latest"
         "eslint@latest"
@@ -84,11 +111,14 @@ populate_npm() {
         "react@latest"
         "vue@latest"
         "angular@latest"
+        "lodash@latest"
+        "express@latest"
+        "axios@latest"
     )
 
     for package in "${packages[@]}"; do
         echo "Installing $package..."
-        npm install $package --registry $(get_repository_endpoint "npm-store" "npm")
+        npm install $package
     done
 
     echo "✅ npm repository populated"
@@ -170,16 +200,21 @@ populate_generic() {
         # Download the binary
         curl -L -o "/tmp/${tool_name}.tar.gz" "$download_url"
 
-        # Upload to CodeArtifact
-        aws codeartifact upload-package-version-asset \
+        # Calculate SHA256 hash
+        local sha256_hash=$(shasum -a 256 "/tmp/${tool_name}.tar.gz" | cut -d' ' -f1)
+
+        # Upload to CodeArtifact with timestamp version
+        local timestamp=$(date +%Y%m%d%H%M%S)
+        aws codeartifact publish-package-version \
             --domain $DOMAIN_NAME \
             --repository generic-store \
             --format generic \
             --namespace security-tools \
             --package $tool_name \
-            --package-version "latest" \
+            --package-version "$timestamp" \
             --asset-name "${tool_name}.tar.gz" \
-            --asset file:///tmp/${tool_name}.tar.gz \
+            --asset-content "/tmp/${tool_name}.tar.gz" \
+            --asset-sha256 "$sha256_hash" \
             --region $AWS_REGION
 
         # Clean up
@@ -205,21 +240,24 @@ main() {
     echo "Starting repository population..."
     echo ""
 
-    # Configure package managers
-    configure_npm
-    configure_pip
+    # Refresh authentication tokens first
+    refresh_tokens
     echo ""
 
     # Populate repositories
     populate_npm
     echo ""
 
+    # Refresh tokens before pip operations
+    refresh_tokens
     populate_pip
     echo ""
 
     populate_maven
     echo ""
 
+    # Refresh tokens before generic operations
+    refresh_tokens
     populate_generic
     echo ""
 

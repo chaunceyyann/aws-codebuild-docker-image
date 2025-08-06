@@ -19,9 +19,12 @@
 
 **Usage**:
 ```bash
-# Configure npm
+# Configure npm (recommended method)
+aws codeartifact login --tool npm --repository npm-store --domain $DOMAIN_NAME --region $AWS_REGION
+
+# Alternative manual method
 npm config set registry $NPM_ENDPOINT
-npm config set //$NPM_ENDPOINT:_authToken $TOKEN
+npm config set //$DOMAIN:_authToken $TOKEN
 
 # Install packages
 npm install lodash

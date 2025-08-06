@@ -66,14 +66,16 @@ PIP_ENDPOINT=$(aws codeartifact get-repository-endpoint \
 ### Step 2: Populate npm Repository
 
 ```bash
-# Configure npm to use CodeArtifact
+# Configure npm to use CodeArtifact (recommended method)
+aws codeartifact login --tool npm --repository npm-store --domain $DOMAIN_NAME --region $AWS_REGION
+
+# Alternative manual method
 npm config set registry $NPM_ENDPOINT
-npm config set //$NPM_ENDPOINT:_authToken $TOKEN
-npm config set //$NPM_ENDPOINT:always-auth true
+npm config set //$DOMAIN:_authToken $TOKEN
 
 # Install packages (they'll be cached in CodeArtifact)
 npm install npm@latest
-npm install node@latest
+npm install yarn@latest
 npm install typescript@latest
 npm install eslint@latest
 npm install jest@latest
@@ -81,6 +83,9 @@ npm install webpack@latest
 npm install react@latest
 npm install vue@latest
 npm install angular@latest
+npm install lodash@latest
+npm install express@latest
+npm install axios@latest
 ```
 
 ### Step 3: Populate pip Repository
