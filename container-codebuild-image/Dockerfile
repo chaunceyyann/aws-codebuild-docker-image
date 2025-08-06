@@ -50,6 +50,20 @@ RUN curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash - && \
 # Install Python packages
 RUN pip3.11 install boto3 requests
 
+# Install security tools from CodeArtifact
+# Get CodeArtifact auth token and configure pip
+RUN aws codeartifact get-authorization-token --domain security-tools-domain --region ${AWS_REGION:-us-east-1} --query authorizationToken --output text > /tmp/codeartifact_token && \
+    pip3.11 config set global.index-url https://aws:$(cat /tmp/codeartifact_token)@security-tools-domain-${AWS_ACCOUNT_ID}.d.codeartifact.${AWS_REGION:-us-east-1}.amazonaws.com/pypi/pip-store/simple/ && \
+    rm /tmp/codeartifact_token
+
+# Install security tools from CodeArtifact
+RUN pip3.11 install checkov bandit
+
+# Copy and run binary tools installation script
+COPY install_binary_tools.sh /tmp/install_binary_tools.sh
+RUN chmod +x /tmp/install_binary_tools.sh && \
+    /tmp/install_binary_tools.sh
+
 # Install Go (latest)
 RUN curl -fsSL https://go.dev/dl/$(curl -s https://go.dev/dl/ | grep -o 'go[0-9]\+\.[0-9]\+\.[0-9]\+\.linux-amd64\.tar\.gz' | head -1) -o go.tar.gz && \
     tar -C /usr/local -xzf go.tar.gz && \

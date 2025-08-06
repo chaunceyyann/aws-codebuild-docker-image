@@ -118,3 +118,15 @@ variable "codebuild_sg_id" {
   description = "The ID of the security group for CodeBuild."
   type        = string
 }
+
+variable "codeartifact_domain_name" {
+  description = "The name of the CodeArtifact domain."
+  type        = string
+  default     = "security-tools-domain"
+}
+
+variable "codeartifact_repository_name" {
+  description = "The name of the CodeArtifact repository for binary packages."
+  type        = string
+  default     = "generic-store"
+}

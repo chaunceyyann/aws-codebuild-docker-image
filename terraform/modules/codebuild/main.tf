@@ -38,6 +38,21 @@ resource "aws_codebuild_project" "build" {
             name  = "VERSION"
             value = var.image_version
             type  = "PLAINTEXT"
+          },
+          {
+            name  = "AWS_ACCOUNT_ID"
+            value = data.aws_caller_identity.current.account_id
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "CODEARTIFACT_DOMAIN_NAME"
+            value = var.codeartifact_domain_name
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "CODEARTIFACT_REPOSITORY_NAME"
+            value = var.codeartifact_repository_name
+            type  = "PLAINTEXT"
           }
         ],
         var.environment_variables

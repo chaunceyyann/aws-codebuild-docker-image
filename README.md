@@ -4,25 +4,37 @@
 This project automates the daily creation of a customized, secure Docker image for AWS CodeBuild using AWS CodePipeline and CodeBuild. Built from a default Amazon Linux 2 AMI, the image includes Python 3.10, pip, Docker, Terraform 1.6.6, tflint, AWS CLI, Node.js, and security tools Grype and Trivy for vulnerability scanning. The Terraform-defined pipeline builds, tests, and pushes the image to Amazon ECR, ensuring compliance and security for consistent CI/CD workflows across CodeBuild projects.
 
 ## Features
-- **Custom Docker Image**: Includes Python 3.10, pip, Docker, Terraform 1.6.6, tflint, AWS CLI, Node.js, Grype, and Trivy.
+- **Custom Docker Image**: Includes Python 3.11, pip, Docker, Terraform, tflint, AWS CLI, Node.js, and security tools.
+- **AWS CodeArtifact Integration**: Centralized package management for security tools (trivy, grype, semgrep, checkov, bandit, etc.).
+- **Automated Package Updates**: Daily Lambda function checks for and updates latest package versions.
 - **Automated Pipeline**: Daily builds via AWS CodePipeline/CodeBuild, with compliance and vulnerability tests.
 - **Security**: Grype and Trivy scan for vulnerabilities, ensuring a secure baseline image.
 - **ECR Integration**: Pushes images to Amazon ECR for use in CodeBuild environments.
 - **Terraform-Driven**: Infrastructure and pipeline defined as code for reproducibility.
 
 ## Prerequisites
-- **AWS Account**: Permissions for CodePipeline, CodeBuild, ECR, IAM, and S3.
-- **Terraform**: Version 1.6.6 installed locally for pipeline deployment.
+- **AWS Account**: Permissions for CodePipeline, CodeBuild, ECR, IAM, S3, CodeArtifact, and Lambda.
+- **Terraform**: Version 1.6.6+ installed locally for pipeline deployment.
 - **AWS CLI**: Configured with credentials (`aws configure`).
 - **Docker**: Installed locally for testing (e.g., Docker Desktop).
 - **Git**: For cloning the repository.
 - **OpenSSL**: Required for secure Git operations (e.g., HTTPS cloning).
+- **jq**: Required for JSON parsing in setup scripts.
 
 ## Installation
+
+### Quick Start (Recommended)
+```bash
+git clone https://github.com/<your-repo>/aws-codebuild-docker-image.git
+cd aws-codebuild-docker-image
+./deploy.sh
+```
+
+### Manual Installation
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/<your-repo>/secure-codebuild-image.git
-   cd secure-codebuild-image
+   git clone https://github.com/<your-repo>/aws-codebuild-docker-image.git
+   cd aws-codebuild-docker-image
    ```
    Ensure OpenSSL is installed to avoid `SSL_ERROR_SYSCALL` (e.g., `sudo apt install openssl` on Ubuntu).
 
@@ -36,6 +48,12 @@ This project automates the daily creation of a customized, secure Docker image f
    ```bash
    terraform init
    terraform apply -var="aws_region=us-east-1" -var="ecr_repo_name=secure-codebuild-image"
+   ```
+
+4. **Initialize CodeArtifact Repositories**:
+   ```bash
+   chmod +x scripts/setup_codeartifact.sh
+   ./scripts/setup_codeartifact.sh
    ```
 
 4. **Build the Docker Image Locally** (optional):
@@ -92,10 +110,18 @@ This project automates the daily creation of a customized, secure Docker image f
 ├── Dockerfile         # Custom Docker image definition
 ├── buildspec.yml      # CodeBuild pipeline configuration
 ├── terraform/         # Terraform files for pipeline and infrastructure
-│   ├── main.tf       # Pipeline, CodeBuild, ECR, IAM setup
+│   ├── main.tf       # Pipeline, CodeBuild, ECR, IAM, CodeArtifact setup
 │   ├── variables.tf  # Configuration variables
 │   └── outputs.tf    # Output ECR repository URL
-├── scripts/           # Utility scripts (e.g., test.sh)
+│   └── modules/      # Terraform modules
+│       ├── codeartifact/ # CodeArtifact domain and repositories
+│       ├── codebuild/    # CodeBuild projects
+│       ├── ecr/          # ECR repositories
+│       └── vpc/          # VPC and networking
+├── scripts/           # Utility scripts
+│   └── setup_codeartifact.sh # CodeArtifact initialization script
+├── docs/              # Documentation
+│   └── codeartifact-setup.md # CodeArtifact setup guide
 └── README.md          # Project documentation
 ```
 
