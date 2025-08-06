@@ -2,6 +2,15 @@
 
 # This file contains the main module calls for the CodeBuild infrastructure
 
+# CodeArtifact module for package management
+module "codeartifact" {
+  source = "./modules/codeartifact"
+
+  domain_name = var.codeartifact_domain_name
+  encryption_key_arn = var.codeartifact_encryption_key_arn
+  tags = var.tags
+}
+
 module "ecr" {
   source = "./modules/ecr"
 
@@ -41,8 +50,10 @@ module "codebuild_docker" {
   privileged_mode       = true                                      # Enable Docker-in-Docker for building images
   codebuild_role_arn    = aws_iam_role.codebuild_role.arn
   codebuild_sg_id       = aws_security_group.codebuild_sg.id
+  codeartifact_domain_name = module.codeartifact.domain_name
+  codeartifact_repository_name = module.codeartifact.generic_repository_name
 
-  depends_on = [module.ecr]
+  depends_on = [module.ecr, module.codeartifact]
 }
 
 # Static code scanner using our custom image
@@ -63,6 +74,8 @@ module "codebuild_scanner" {
   privileged_mode       = true                                        # Enable Docker-in-Docker for building images
   codebuild_role_arn    = aws_iam_role.codebuild_role.arn
   codebuild_sg_id       = aws_security_group.codebuild_sg.id
+  codeartifact_domain_name = module.codeartifact.domain_name
+  codeartifact_repository_name = module.codeartifact.generic_repository_name
   environment_variables = [
     {
       name  = "SCAN_TYPE"
@@ -71,7 +84,7 @@ module "codebuild_scanner" {
     }
   ]
 
-  depends_on = [module.ecr, module.ecr_scanner]
+  depends_on = [module.ecr, module.ecr_scanner, module.codeartifact]
 }
 
 # Dynamic CodeBuild projects as GitHub Actions runners

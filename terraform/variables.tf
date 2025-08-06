@@ -33,3 +33,21 @@ variable "scanner_image_version" {
   type        = string
   default     = "1.0.0"
 }
+
+variable "codeartifact_domain_name" {
+  description = "Name of the CodeArtifact domain"
+  type        = string
+  default     = "security-tools-domain"
+}
+
+variable "codeartifact_encryption_key_arn" {
+  description = "ARN of the KMS key for CodeArtifact encryption (optional)"
+  type        = string
+  default     = null
+}
+
+variable "tags" {
+  description = "Tags to apply to resources"
+  type        = map(string)
+  default     = {}
+}

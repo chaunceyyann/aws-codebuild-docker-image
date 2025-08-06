@@ -83,6 +83,42 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = data.aws_secretsmanager_secret.github_token.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "codeartifact:GetAuthorizationToken",
+          "codeartifact:GetRepositoryEndpoint",
+          "codeartifact:ReadFromRepository",
+          "codeartifact:GetPackageVersionAsset",
+          "codeartifact:GetPackageVersion",
+          "codeartifact:ListPackageVersions",
+          "codeartifact:ListPackages",
+          "codeartifact:DescribePackage",
+          "codeartifact:DescribePackageVersion",
+          "codeartifact:DescribeRepository",
+          "codeartifact:DescribeDomain",
+          "codeartifact:ListRepositories",
+          "codeartifact:ListRepositoriesInDomain",
+          "codeartifact:GetDomainPermissionsPolicy",
+          "codeartifact:GetRepositoryPermissionsPolicy"
+        ]
+        Resource = [
+          module.codeartifact.domain_arn,
+          "${module.codeartifact.domain_arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sts:GetServiceBearerToken"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "sts:AWSServiceName" = "codeartifact.amazonaws.com"
+          }
+        }
       }
     ]
   })
