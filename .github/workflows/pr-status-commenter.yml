@@ -5,6 +5,7 @@ on:
     types: [completed]
   check_run:
     types: [completed]
+  workflow_dispatch: # Allow manual trigger for testing
 
 permissions:
   issues: write
@@ -14,13 +15,7 @@ permissions:
 
 jobs:
   comment-on-pr:
-    runs-on: ubuntu-latest
-    if: github.event.check_suite.conclusion != 'skipped'
-    steps:
-      - name: Comment on PR Status
-        uses: chaunceyyann/cyan-actions/.github/actions/pr-status-commenter@dev
-        with:
-          required-checks: 'pre-commit,terraform-lint'
-          prevent-duplicates: 'true'
-          include-check-links: 'true'
-          bot-name: 'PR Status Commenter App'
+    uses: chaunceyyann/cyan-actions/.github/workflows/reusable-pr-status-commenter.yml@dev
+    with:
+      required-checks: 'pre-commit,terraform-lint'
+    secrets: inherit
