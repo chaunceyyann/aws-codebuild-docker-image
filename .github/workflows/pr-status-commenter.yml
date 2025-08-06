@@ -1,8 +1,10 @@
 name: PR Status Commenter
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  check_suite:
+    types: [completed]
+  check_run:
+    types: [completed]
   workflow_dispatch: # Allow manual trigger for testing
 
 permissions:
