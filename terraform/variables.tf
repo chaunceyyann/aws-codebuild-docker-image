@@ -51,3 +51,34 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# Compute Fleet Configuration
+variable "fleet_base_capacity" {
+  description = "Base capacity for the CodeBuild compute fleet"
+  type        = number
+  default     = 1
+}
+
+variable "fleet_target_capacity" {
+  description = "Target capacity for the CodeBuild compute fleet"
+  type        = number
+  default     = 2
+}
+
+variable "fleet_max_capacity" {
+  description = "Maximum capacity for the CodeBuild compute fleet"
+  type        = number
+  default     = 10
+}
+
+variable "fleet_min_capacity" {
+  description = "Minimum capacity for the CodeBuild compute fleet"
+  type        = number
+  default     = 0
+}
+
+variable "enable_fleet_for_runners" {
+  description = "Enable compute fleet for GitHub Actions runners"
+  type        = bool
+  default     = true
+}
