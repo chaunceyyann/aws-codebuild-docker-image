@@ -30,7 +30,7 @@ resource "aws_lambda_function" "main" {
   timeout         = var.timeout
   memory_size     = var.memory_size
   description     = var.description
-  source_code_hash = var.build_package ? filebase64sha256("${path.module}/dist/${var.function_name}.zip") : null
+  source_code_hash = var.build_package ? data.archive_file.lambda_zip[0].output_base64sha256 : null
 
   dynamic "environment" {
     for_each = length(var.environment_variables) > 0 ? [1] : []
@@ -50,6 +50,16 @@ resource "aws_lambda_function" "main" {
   tags = var.tags
 
   depends_on = [null_resource.build_lambda]
+}
+
+# Reference the existing Lambda package for hash calculation
+data "archive_file" "lambda_zip" {
+  count = var.build_package ? 1 : 0
+
+  type        = "zip"
+  source_file = "${path.module}/dist/${var.function_name}.zip"
+  output_path = "${path.module}/dist/${var.function_name}.zip"
+  depends_on  = [null_resource.build_lambda]
 }
 
 
