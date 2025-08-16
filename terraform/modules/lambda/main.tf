@@ -22,7 +22,7 @@ resource "null_resource" "build_lambda" {
 
 # Lambda function
 resource "aws_lambda_function" "main" {
-  filename         = var.build_package ? data.archive_file.lambda_zip[0].output_path : var.source_file
+  filename         = var.build_package ? "${path.module}/dist/${var.function_name}.zip" : var.source_file
   function_name    = var.function_name
   role            = var.role_arn
   handler         = var.handler
@@ -30,6 +30,7 @@ resource "aws_lambda_function" "main" {
   timeout         = var.timeout
   memory_size     = var.memory_size
   description     = var.description
+  source_code_hash = var.build_package ? filebase64sha256("${path.module}/dist/${var.function_name}.zip") : null
 
   dynamic "environment" {
     for_each = length(var.environment_variables) > 0 ? [1] : []
@@ -47,17 +48,11 @@ resource "aws_lambda_function" "main" {
   }
 
   tags = var.tags
+
+  depends_on = [null_resource.build_lambda]
 }
 
-# Archive the Lambda function (only if building package)
-data "archive_file" "lambda_zip" {
-  count = var.build_package ? 1 : 0
 
-  type        = "zip"
-  source_file = "${path.module}/dist/${var.function_name}.zip"
-  output_path = "${path.module}/dist/${var.function_name}.zip"
-  depends_on  = [null_resource.build_lambda]
-}
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "lambda_logs" {
