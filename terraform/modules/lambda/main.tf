@@ -1,28 +1,11 @@
 # Generic Lambda Function Module
 # This module creates a Lambda function with proper packaging and deployment
 
-# Build Lambda function with dependencies
-resource "null_resource" "build_lambda" {
-  count = var.build_package ? 1 : 0
 
-  triggers = {
-    source_code_hash = filemd5("${path.module}/src/${var.function_directory != null ? "${var.function_directory}/" : ""}${var.handler_file}")
-    requirements_hash = fileexists("${path.module}/src/${var.function_directory != null ? "${var.function_directory}/" : ""}requirements.txt") ? filemd5("${path.module}/src/${var.function_directory != null ? "${var.function_directory}/" : ""}requirements.txt") : "no-requirements"
-    build_script_hash = filemd5("${path.module}/build.sh")
-  }
-
-  provisioner "local-exec" {
-    command = "${path.module}/build.sh --clean --validate"
-    environment = {
-      FUNCTION_NAME = var.function_name
-      FUNCTION_DIRECTORY = var.function_directory
-    }
-  }
-}
 
 # Lambda function
 resource "aws_lambda_function" "main" {
-  filename         = var.build_package ? "${path.module}/dist/${var.function_name}.zip" : var.source_file
+  filename         = var.build_package ? data.archive_file.lambda_zip[0].output_path : var.source_file
   function_name    = var.function_name
   role            = var.role_arn
   handler         = var.handler
@@ -49,17 +32,16 @@ resource "aws_lambda_function" "main" {
 
   tags = var.tags
 
-  depends_on = [null_resource.build_lambda]
 }
 
-# Reference the existing Lambda package for hash calculation
+# Create Lambda package from source files
 data "archive_file" "lambda_zip" {
   count = var.build_package ? 1 : 0
 
   type        = "zip"
-  source_file = "${path.module}/dist/${var.function_name}.zip"
+  source_dir  = "${path.module}/src/${var.function_directory != null ? var.function_directory : ""}"
   output_path = "${path.module}/dist/${var.function_name}.zip"
-  depends_on  = [null_resource.build_lambda]
+  excludes    = ["__pycache__", "*.pyc", "*.pyo", "*.pyd", ".pytest_cache", "*.egg-info"]
 }
 
 
