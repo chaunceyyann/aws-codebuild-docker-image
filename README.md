@@ -11,6 +11,9 @@ This project automates the daily creation of a customized, secure Docker image f
 - **Security**: Grype and Trivy scan for vulnerabilities, ensuring a secure baseline image.
 - **ECR Integration**: Pushes images to Amazon ECR for use in CodeBuild environments.
 - **Terraform-Driven**: Infrastructure and pipeline defined as code for reproducibility.
+- **Compute Fleet Support**: Pre-warmed EC2 instances for faster build start times and cost optimization.
+- **Manual Fleet Control**: Start/stop fleet manually to optimize costs during non-business hours.
+- **Real-time Monitoring**: CloudWatch dashboard and metrics for fleet performance tracking.
 
 ## Prerequisites
 - **AWS Account**: Permissions for CodePipeline, CodeBuild, ECR, IAM, S3, CodeArtifact, and Lambda.
@@ -105,6 +108,51 @@ cd aws-codebuild-docker-image
 3. **Use in CodeBuild**:
    - Configure CodeBuild projects to use the ECR image (e.g., `<account-id>.dkr.ecr.<region>.amazonaws.com/secure-codebuild-image:latest`).
 
+## Compute Fleet Management
+
+The project includes a compute fleet feature that provides pre-warmed EC2 instances for faster build start times and cost optimization.
+
+### Quick Fleet Control
+
+```bash
+# Start the fleet with default capacity (2 instances)
+./scripts/fleet_control.sh start
+
+# Start with custom capacity
+./scripts/fleet_control.sh start 5
+
+# Stop the fleet to save costs
+./scripts/fleet_control.sh stop
+
+# Check fleet status
+./scripts/fleet_control.sh status
+
+# Monitor fleet metrics in real-time
+./scripts/fleet_control.sh monitor
+```
+
+### Fleet Configuration
+
+Configure the fleet in `terraform/variables.tf`:
+
+```hcl
+# Compute Fleet Configuration
+fleet_base_capacity    = 1
+fleet_target_capacity  = 2
+fleet_max_capacity     = 10
+fleet_min_capacity     = 0
+enable_fleet_for_runners = true
+```
+
+### Cost Optimization
+
+- **Manual Control**: Start/stop fleet during business hours
+- **Auto-scaling**: Automatically scales based on demand
+- **Monitoring**: Real-time metrics and CloudWatch dashboard
+- **Scheduled Control**: Optional automatic scheduling for predictable usage
+
+For detailed setup and management instructions, see [Compute Fleet Setup Guide](docs/compute-fleet-setup.md).
+
 ## Directory Structure
 ```
 ├── Dockerfile         # Custom Docker image definition
@@ -116,12 +164,17 @@ cd aws-codebuild-docker-image
 │   └── modules/      # Terraform modules
 │       ├── codeartifact/ # CodeArtifact domain and repositories
 │       ├── codebuild/    # CodeBuild projects
+│       ├── compute-fleet/ # Compute fleet for pre-warmed instances
 │       ├── ecr/          # ECR repositories
+│       ├── lambda/       # Generic Lambda function module
 │       └── vpc/          # VPC and networking
 ├── scripts/           # Utility scripts
-│   └── setup_codeartifact.sh # CodeArtifact initialization script
+│   ├── setup_codeartifact.sh # CodeArtifact initialization script
+│   ├── fleet_control.sh      # Fleet control script
+│   └── fleet_examples.sh     # Fleet usage examples
 ├── docs/              # Documentation
-│   └── codeartifact-setup.md # CodeArtifact setup guide
+│   ├── codeartifact-setup.md # CodeArtifact setup guide
+│   └── compute-fleet-setup.md # Compute fleet setup guide
 └── README.md          # Project documentation
 ```
 

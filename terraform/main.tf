@@ -2,6 +2,26 @@
 
 # This file contains the main module calls for the CodeBuild infrastructure
 
+# Compute Fleet for CodeBuild runners
+module "compute_fleet" {
+  source = "./modules/compute-fleet"
+
+  fleet_name         = "codebuild-runners-fleet"
+  base_capacity      = var.fleet_base_capacity
+  target_capacity    = var.fleet_target_capacity
+  max_capacity       = var.fleet_max_capacity
+  min_capacity       = var.fleet_min_capacity
+  environment_type   = "LINUX_CONTAINER"
+  compute_type       = "BUILD_GENERAL1_MEDIUM"
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  security_group_id  = aws_security_group.codebuild_sg.id
+  aws_region         = var.aws_region
+  tags               = var.tags
+
+  depends_on = [module.vpc, aws_security_group.codebuild_sg]
+}
+
 # CodeArtifact module for package management
 module "codeartifact" {
   source = "./modules/codeartifact"
@@ -124,9 +144,13 @@ module "codebuild_runners" {
   compute_type     = "BUILD_GENERAL1_MEDIUM"
   privileged_mode  = false
 
+  # Use compute fleet if enabled
+  use_compute_fleet   = var.enable_fleet_for_runners
+  compute_fleet_arn   = var.enable_fleet_for_runners ? module.compute_fleet.fleet_arn : null
+
   environment_variables = []
 
-  depends_on = [module.ecr]
+  depends_on = [module.ecr, module.compute_fleet]
 }
 
 # New CodeBuild project for YAML Validator Runner

@@ -130,3 +130,15 @@ variable "codeartifact_repository_name" {
   type        = string
   default     = "generic-store"
 }
+
+variable "use_compute_fleet" {
+  description = "Whether to use a compute fleet instead of standard compute resources"
+  type        = bool
+  default     = false
+}
+
+variable "compute_fleet_arn" {
+  description = "ARN of the compute fleet to use (required if use_compute_fleet is true)"
+  type        = string
+  default     = null
+}

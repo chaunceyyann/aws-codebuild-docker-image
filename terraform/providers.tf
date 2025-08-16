@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 3.0.0" # Ensure a version that supports auth block
+      version = ">= 5.0.0" # Required for CodeBuild compute fleets
     }
   }
   required_version = ">= 1.6.6"
