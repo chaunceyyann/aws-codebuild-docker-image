@@ -16,6 +16,15 @@ resource "aws_codebuild_project" "build" {
     image_pull_credentials_type = var.image_pull_credentials_type
     privileged_mode             = var.privileged_mode
 
+    dynamic "fleet" {
+      for_each = var.use_compute_fleet ? [1] : []
+      content {
+        fleet_arn = var.compute_fleet_arn
+      }
+    }
+
+
+
     dynamic "environment_variable" {
       for_each = concat(
         [
@@ -92,13 +101,6 @@ resource "aws_codebuild_project" "build" {
   tags = {
     Name    = var.project_name
     Project = "docker-image-4codebuild"
-  }
-
-  dynamic "compute_fleet" {
-    for_each = var.use_compute_fleet ? [1] : []
-    content {
-      fleet_arn = var.compute_fleet_arn
-    }
   }
 }
 
