@@ -109,7 +109,8 @@ resource "aws_iam_role_policy" "fleet_policy" {
           "ec2:CreateNetworkInterface",
           "ec2:DeleteNetworkInterface",
           "ec2:DescribeNetworkInterfaceAttribute",
-          "ec2:ModifyNetworkInterfaceAttribute"
+          "ec2:ModifyNetworkInterfaceAttribute",
+          "ec2:DescribeDhcpOptions"
         ]
         Resource = "*"
       }
