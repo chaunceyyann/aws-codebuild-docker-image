@@ -18,7 +18,7 @@ def lambda_handler(event, context):
 
     Expected event format:
     {
-        "action": "start" | "stop" | "status",
+        "action": "start" | "stop" | "status" | "init",
         "target_capacity": <number> (optional, for start action)
     }
     """
@@ -43,12 +43,14 @@ def lambda_handler(event, context):
             return stop_fleet(fleet_name, target_capacity_off)
         elif action == "status":
             return get_fleet_status(fleet_name)
+        elif action == "init":
+            return init_fleet(fleet_name, target_capacity_on)
         else:
             return {
                 "statusCode": 400,
                 "body": json.dumps(
                     {
-                        "error": f"Invalid action: {action}. Must be start, stop, or status."
+                        "error": f"Invalid action: {action}. Must be start, stop, status, or init."
                     }
                 ),
             }
@@ -138,4 +140,30 @@ def get_fleet_status(fleet_name):
         return {"statusCode": 200, "body": json.dumps(status)}
     except Exception as e:
         logger.error(f"Error getting fleet status: {str(e)}")
+        raise
+
+
+def init_fleet(fleet_name, target_capacity):
+    """Initialize the fleet with initial scaling configuration"""
+    try:
+        response = codebuild.update_fleet_scaling_configuration(
+            fleetName=fleet_name, targetCapacity=target_capacity
+        )
+
+        logger.info(
+            f"Initialized fleet {fleet_name} with target capacity: {target_capacity}"
+        )
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps(
+                {
+                    "message": f"Fleet {fleet_name} initialized successfully",
+                    "target_capacity": target_capacity,
+                    "fleet_name": fleet_name,
+                }
+            ),
+        }
+    except Exception as e:
+        logger.error(f"Error initializing fleet: {str(e)}")
         raise

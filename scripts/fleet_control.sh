@@ -36,13 +36,14 @@ print_error() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 {start|stop|status|monitor} [target_capacity]"
+    echo "Usage: $0 {start|stop|status|monitor|init} [target_capacity]"
     echo ""
     echo "Commands:"
     echo "  start [capacity]  - Start the fleet with optional target capacity (default: 2)"
     echo "  stop              - Stop the fleet (set capacity to 0)"
     echo "  status            - Show current fleet status"
     echo "  monitor           - Monitor fleet metrics in real-time"
+    echo "  init              - Initialize fleet scaling configuration"
     echo ""
     echo "Examples:"
     echo "  $0 start          # Start with default capacity (2)"
@@ -133,6 +134,28 @@ get_fleet_status() {
         rm -f /tmp/fleet_response.json
     else
         print_error "Failed to get fleet status"
+        exit 1
+    fi
+}
+
+# Function to initialize fleet
+init_fleet() {
+    print_status "Initializing fleet scaling configuration"
+
+    aws lambda invoke \
+        --function-name "$LAMBDA_FUNCTION_NAME" \
+        --region "$AWS_REGION" \
+        --payload '{"action": "init"}' \
+        --cli-binary-format raw-in-base64-out \
+        /tmp/fleet_response.json
+
+    if [ $? -eq 0 ]; then
+        print_success "Fleet initialization completed successfully"
+        echo "Response:"
+        cat /tmp/fleet_response.json | jq -r '.body' | jq .
+        rm -f /tmp/fleet_response.json
+    else
+        print_error "Failed to initialize fleet"
         exit 1
     fi
 }
@@ -243,6 +266,9 @@ main() {
             ;;
         monitor)
             monitor_fleet
+            ;;
+        init)
+            init_fleet
             ;;
         *)
             show_usage

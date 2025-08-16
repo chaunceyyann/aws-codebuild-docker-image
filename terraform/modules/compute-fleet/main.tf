@@ -9,6 +9,7 @@ resource "aws_codebuild_fleet" "main" {
   base_capacity = var.base_capacity
   environment_type = var.environment_type
   compute_type = var.compute_type
+  fleet_service_role = aws_iam_role.fleet_role.arn
 
   vpc_config {
     vpc_id             = var.vpc_id
@@ -22,17 +23,16 @@ resource "aws_codebuild_fleet" "main" {
   })
 }
 
-# Fleet scaling configuration
-resource "aws_codebuild_fleet_scaling_configuration" "main" {
-  fleet_name = aws_codebuild_fleet.main.name
+# Initialize fleet scaling configuration
+resource "null_resource" "init_fleet" {
+  depends_on = [module.fleet_controller]
 
-  target_capacity = var.target_capacity
-  max_capacity    = var.max_capacity
-  min_capacity    = var.min_capacity
-
-  scale_in_cooldown  = var.scale_in_cooldown
-  scale_out_cooldown = var.scale_out_cooldown
+  provisioner "local-exec" {
+    command = "aws lambda invoke --function-name ${module.fleet_controller.function_name} --payload '{\"action\": \"init\"}' --region ${var.aws_region} /tmp/fleet_init_response.json"
+  }
 }
+
+
 
 # IAM Role for the compute fleet
 resource "aws_iam_role" "fleet_role" {
