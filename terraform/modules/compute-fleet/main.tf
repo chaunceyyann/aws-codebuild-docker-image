@@ -98,6 +98,20 @@ resource "aws_iam_role_policy" "fleet_policy" {
           "codeartifact:ReadFromRepository"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:CreateNetworkInterface",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DescribeNetworkInterfaceAttribute",
+          "ec2:ModifyNetworkInterfaceAttribute"
+        ]
+        Resource = "*"
       }
     ]
   })
