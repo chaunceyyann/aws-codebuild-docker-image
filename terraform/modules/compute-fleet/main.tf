@@ -13,7 +13,7 @@ resource "aws_codebuild_fleet" "main" {
 
   vpc_config {
     vpc_id             = var.vpc_id
-    subnets            = var.private_subnet_ids
+    subnets            = [var.private_subnet_ids[0]]  # CodeBuild fleets only support 1 subnet
     security_group_ids = [var.security_group_id]
   }
 
@@ -88,7 +88,7 @@ resource "aws_iam_role_policy" "fleet_policy" {
           "s3:GetObjectVersion",
           "s3:PutObject"
         ]
-        Resource = "${var.artifacts_bucket_arn}/*"
+        Resource = var.artifacts_bucket_arn == "*" ? "*" : "${var.artifacts_bucket_arn}/*"
       },
       {
         Effect = "Allow"

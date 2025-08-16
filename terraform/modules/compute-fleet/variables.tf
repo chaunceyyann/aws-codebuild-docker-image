@@ -69,7 +69,7 @@ variable "scale_out_cooldown" {
 }
 
 variable "artifacts_bucket_arn" {
-  description = "ARN of the S3 bucket for artifacts"
+  description = "ARN of the S3 bucket for artifacts (use '*' for all buckets)"
   type        = string
   default     = "*"
 }
