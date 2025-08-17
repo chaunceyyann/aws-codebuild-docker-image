@@ -11,7 +11,7 @@ resource "aws_codebuild_project" "build" {
 
   environment {
     type                        = var.environment_type
-    compute_type                = var.use_compute_fleet ? null : var.compute_type
+    compute_type                = var.use_compute_fleet ? "BUILD_GENERAL1_SMALL" : var.compute_type
     image                       = var.image
     image_pull_credentials_type = var.image_pull_credentials_type
     privileged_mode             = var.privileged_mode
