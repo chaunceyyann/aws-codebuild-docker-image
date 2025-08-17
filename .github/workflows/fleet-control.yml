@@ -91,10 +91,126 @@ jobs:
           echo "**Triggered at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Display Lambda function output if available
+                    # Display Lambda function output if available
           if [ -f "/tmp/fleet_response.json" ]; then
-            echo "**Lambda Response:**" >> $GITHUB_STEP_SUMMARY
-            echo '```json' >> $GITHUB_STEP_SUMMARY
-            cat /tmp/fleet_response.json >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "## 📊 Lambda Response Details" >> $GITHUB_STEP_SUMMARY
+
+            # Extract the body from the Lambda response and format it
+            response_body=$(cat /tmp/fleet_response.json | jq -r '.body' 2>/dev/null)
+
+            if [ -n "$response_body" ]; then
+              # Try to parse as JSON and format nicely
+              if echo "$response_body" | jq . >/dev/null 2>&1; then
+                echo "### 🔍 Full Response" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo '```json' >> $GITHUB_STEP_SUMMARY
+                echo "$response_body" | jq . >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+
+                # Extract key information for quick summary
+                echo "### 📋 Quick Summary" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+
+                # Extract message if available
+                message=$(echo "$response_body" | jq -r '.message // empty' 2>/dev/null)
+                if [ -n "$message" ]; then
+                  echo "**💬 Message:** $message" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+                # Extract fleet information if available
+                fleet_name=$(echo "$response_body" | jq -r '.fleet.fleet_name // empty' 2>/dev/null)
+                if [ -n "$fleet_name" ]; then
+                  echo "**🚀 Fleet Details:**" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Name:** \`$fleet_name\`" >> $GITHUB_STEP_SUMMARY
+                  base_capacity=$(echo "$response_body" | jq -r '.fleet.base_capacity // empty' 2>/dev/null)
+                  if [ -n "$base_capacity" ]; then
+                    echo "- **Base Capacity:** \`$base_capacity\`" >> $GITHUB_STEP_SUMMARY
+                  fi
+                  fleet_status=$(echo "$response_body" | jq -r '.fleet.status.statusCode // empty' 2>/dev/null)
+                  if [ -n "$fleet_status" ]; then
+                    echo "- **Status:** \`$fleet_status\`" >> $GITHUB_STEP_SUMMARY
+                  fi
+                  compute_type=$(echo "$response_body" | jq -r '.fleet.compute_type // empty' 2>/dev/null)
+                  if [ -n "$compute_type" ]; then
+                    echo "- **Compute Type:** \`$compute_type\`" >> $GITHUB_STEP_SUMMARY
+                  fi
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+                # Extract project information if available
+                total_projects=$(echo "$response_body" | jq -r '.summary.total_github_projects // empty' 2>/dev/null)
+                if [ -n "$total_projects" ]; then
+                  echo "**📁 Project Summary:**" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Total Projects:** \`$total_projects\`" >> $GITHUB_STEP_SUMMARY
+                  fleet_projects=$(echo "$response_body" | jq -r '.summary.projects_using_fleet // empty' 2>/dev/null)
+                  if [ -n "$fleet_projects" ]; then
+                    echo "- **Using Fleet:** \`$fleet_projects\`" >> $GITHUB_STEP_SUMMARY
+                  fi
+                  ondemand_projects=$(echo "$response_body" | jq -r '.summary.projects_using_ondemand // empty' 2>/dev/null)
+                  if [ -n "$ondemand_projects" ]; then
+                    echo "- **Using On-Demand:** \`$ondemand_projects\`" >> $GITHUB_STEP_SUMMARY
+                  fi
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+                # Extract target capacity if available
+                target_capacity=$(echo "$response_body" | jq -r '.target_capacity // empty' 2>/dev/null)
+                if [ -n "$target_capacity" ]; then
+                  echo "**🎯 Target Capacity:** \`$target_capacity\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+                # Extract scheduler status if available
+                scheduler_enabled=$(echo "$response_body" | jq -r '.scheduler_enabled // empty' 2>/dev/null)
+                if [ -n "$scheduler_enabled" ]; then
+                  echo "**⏰ Scheduler Status:** \`Enabled: $scheduler_enabled\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+                scheduler_disabled=$(echo "$response_body" | jq -r '.scheduler_disabled // empty' 2>/dev/null)
+                if [ -n "$scheduler_disabled" ]; then
+                  echo "**⏰ Scheduler Status:** \`Disabled: $scheduler_disabled\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+                # Extract updated projects if available
+                updated_projects=$(echo "$response_body" | jq -r '.projects_switched // empty' 2>/dev/null)
+                if [ -n "$updated_projects" ] && [ "$updated_projects" != "null" ]; then
+                  echo "**🔄 Updated Projects:**" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "$updated_projects" | jq -r 'join("\n")' >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+                # Show individual projects if available
+                github_projects=$(echo "$response_body" | jq -r '.github_projects // empty' 2>/dev/null)
+                if [ -n "$github_projects" ] && [ "$github_projects" != "null" ]; then
+                  echo "### 📋 Individual Projects" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo '```json' >> $GITHUB_STEP_SUMMARY
+                  echo "$github_projects" | jq . >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                fi
+
+              else
+                # If not valid JSON, show as plain text
+                echo "### 📝 Response (Plain Text)" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                echo "$response_body" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              # Fallback to raw response
+              echo "### 🔧 Raw Response" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              cat /tmp/fleet_response.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
