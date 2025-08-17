@@ -2,6 +2,9 @@
 # This module creates a compute fleet for CodeBuild with pre-warmed EC2 instances
 # and manual control capabilities for cost optimization
 
+# Get current AWS account ID
+data "aws_caller_identity" "current" {}
+
 # Compute Fleet
 resource "aws_codebuild_fleet" "main" {
   name = var.fleet_name
@@ -159,7 +162,7 @@ module "fleet_controller" {
             "codebuild:UpdateFleet",
             "codebuild:BatchGetFleets"
           ]
-          Resource = aws_codebuild_fleet.main.arn
+          Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:fleet/${var.fleet_name}:*"
         }
       ]
     })
