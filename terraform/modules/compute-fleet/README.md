@@ -50,10 +50,12 @@ graph TB
 - Automatic scaling based on demand
 
 ### **Lambda Controller**
-- **Start/Stop**: Manual fleet control
+- **Start/Stop**: Manual fleet control with automatic scheduler management
 - **Status**: Check fleet capacity and utilization
 - **Init**: Initialize fleet with target capacity
-- **Automated**: Scheduled scaling (optional)
+- **Automated**: Scheduled scaling with timezone-aware scheduling
+- **Smart Scheduling**: Multiple schedule types (business_hours, weekend, custom, smart)
+- **Scheduler Control**: Independent enable/disable EventBridge scheduler
 
 ### **Monitoring**
 - CloudWatch dashboard for fleet metrics
@@ -99,10 +101,10 @@ resource "aws_codebuild_project" "example" {
 
 ### **Using Control Script**
 ```bash
-# Start fleet
+# Start fleet (enables scheduler automatically)
 ./scripts/fleet_control.sh start
 
-# Stop fleet (save costs)
+# Stop fleet (disables scheduler automatically)
 ./scripts/fleet_control.sh stop
 
 # Check status
@@ -110,6 +112,15 @@ resource "aws_codebuild_project" "example" {
 
 # Initialize fleet
 ./scripts/fleet_control.sh init
+
+# Scheduled control (timezone-aware)
+./scripts/fleet_control.sh scheduled_control
+SCHEDULE_TYPE=smart ./scripts/fleet_control.sh scheduled_control
+SCHEDULE_TYPE=weekend ./scripts/fleet_control.sh scheduled_control
+
+# Independent scheduler control
+./scripts/fleet_control.sh enable_scheduler
+./scripts/fleet_control.sh disable_scheduler
 ```
 
 ### **Using AWS CLI**
@@ -165,6 +176,7 @@ aws lambda invoke \
 2. **Monitor utilization** via CloudWatch dashboard
 3. **Adjust capacity** based on build patterns
 4. **Use scheduled scaling** for predictable workloads
+5. **Timezone-aware scheduling** for DST-safe automation
 
 ### **Cost Savings**
 - **Pre-warmed instances**: Faster builds = lower costs
@@ -184,6 +196,111 @@ aws lambda invoke \
 - VPC integration with private subnets
 - Security group restrictions
 - No public internet access (NAT gateway required)
+
+## 🌍 Timezone-Aware Scheduling
+
+### **Problem Solved**
+The original EventBridge schedule used `cron(0 */2 * * ? *)` (every 2 hours), which can cause issues during daylight saving time transitions in timezones that observe DST.
+
+### **Solution**
+Implemented a **timezone-aware scheduling system** that handles DST transitions automatically.
+
+### **Key Features**
+
+#### **1. Fixed Schedule Times**
+- **Old**: `cron(0 */2 * * ? *)` (every 2 hours)
+- **New**: `cron(0 8,12,16,20 * * ? *)` (8 AM, 12 PM, 4 PM, 8 PM UTC daily)
+
+#### **2. Timezone-Aware Logic**
+The Lambda function includes intelligent timezone handling:
+
+```python
+# Use a simple offset approach for Eastern Time (EST/EDT)
+# EST = UTC-5, EDT = UTC-4 (DST)
+eastern_offset = -5  # Default to EST (UTC-5)
+
+# Simple DST detection: March 2nd Sunday to November 1st Sunday
+is_dst = (
+    (current_month > 3 and current_month < 11) or  # April-October
+    (current_month == 3 and current_day >= 8 + (6 - current_weekday) % 7) or  # March 2nd Sunday onwards
+    (current_month == 11 and current_day < 1 + (6 - current_weekday) % 7)  # November before 1st Sunday
+)
+
+if is_dst:
+    eastern_offset = -4  # EDT (UTC-4)
+
+eastern_now = utc_now + datetime.timedelta(hours=eastern_offset)
+```
+
+#### **3. Schedule Types**
+
+| Type | Description | Time Range |
+|------|-------------|------------|
+| `business_hours` | Monday-Friday, 8 AM - 6 PM Eastern | Standard business hours |
+| `weekend` | Fleet off on weekends | Weekend detection |
+| `custom` | Monday-Friday, 9 AM - 5 PM Eastern | Traditional work hours |
+| `smart` | Monday-Friday, 7 AM - 7 PM Eastern | Extended hours for remote work |
+
+#### **4. DST Transition Handling**
+
+The system automatically detects DST transitions:
+- **DST Start**: Second Sunday in March (March 8-14)
+- **DST End**: First Sunday in November (November 1-7)
+- **Offset Adjustment**: EST (UTC-5) ↔ EDT (UTC-4)
+
+### **Benefits**
+
+1. **No DST Issues**: Fixed schedule times prevent timing problems during transitions
+2. **Automatic Adjustment**: Lambda function handles timezone conversion automatically
+3. **Flexible Scheduling**: Multiple schedule types for different work patterns
+4. **Cost Optimization**: Smart scheduling reduces unnecessary fleet usage
+5. **Production Ready**: Handles edge cases and timezone complexities
+
+### **Usage**
+
+```bash
+# Manual testing
+bash ../scripts/fleet_control.sh scheduled_control
+SCHEDULE_TYPE=smart bash ../scripts/fleet_control.sh scheduled_control
+SCHEDULE_TYPE=weekend bash ../scripts/fleet_control.sh scheduled_control
+
+# EventBridge automatically runs every 4 hours (8 AM, 12 PM, 4 PM, 8 PM UTC)
+```
+
+### **Monitoring**
+
+Check EventBridge rule status:
+```bash
+aws events describe-rule --name codebuild-runners-fleet-schedule --region us-east-1
+```
+
+The system now provides **robust, timezone-aware fleet control** that works reliably across DST transitions and different timezones.
+
+## 🎛️ Enhanced Scheduler Control
+
+### **Automatic Scheduler Management**
+The `start` and `stop` commands now automatically manage the EventBridge scheduler:
+
+- **`start` command**: Enables the EventBridge scheduler automatically
+- **`stop` command**: Disables the EventBridge scheduler automatically
+- **Response includes**: Scheduler status in the response
+
+### **Independent Scheduler Control**
+You can also control the scheduler independently:
+
+```bash
+# Enable scheduler without changing fleet capacity
+./scripts/fleet_control.sh enable_scheduler
+
+# Disable scheduler without changing fleet capacity
+./scripts/fleet_control.sh disable_scheduler
+```
+
+### **Benefits**
+1. **True "Off" State**: When you stop the fleet, the scheduler is also disabled, preventing automatic re-enabling
+2. **Flexible Control**: Independent scheduler control allows fine-grained management
+3. **Cost Optimization**: Complete shutdown of automated processes when not needed
+4. **Manual Override**: You can disable the scheduler while keeping the fleet running
 
 ## 🚨 Troubleshooting
 

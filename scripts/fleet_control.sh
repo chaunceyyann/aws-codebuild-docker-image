@@ -36,29 +36,35 @@ print_error() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 {start|stop|status|monitor|init|switch_to_fleet|switch_to_ondemand} [target_capacity]"
+    echo "Usage: $0 {start|stop|status|monitor|init|switch_to_fleet|switch_to_ondemand|scheduled_control|enable_scheduler|disable_scheduler} [target_capacity]"
     echo ""
     echo "Commands:"
     echo "  start [capacity]     - Start the fleet with optional target capacity (default: 2)"
-    echo "  stop                 - Stop the fleet (set capacity to minimum)"
+    echo "  stop                 - Stop the fleet (set capacity to minimum and disable scheduler)"
     echo "  status               - Show current fleet status"
     echo "  monitor              - Monitor fleet metrics in real-time"
     echo "  init                 - Initialize fleet scaling configuration"
     echo "  switch_to_fleet      - Switch CodeBuild projects to use fleet"
     echo "  switch_to_ondemand   - Switch CodeBuild projects back to on-demand (all if no PROJECT_NAMES)"
+    echo "  scheduled_control    - Run scheduled fleet control based on time (business_hours/weekend/custom/smart)"
+    echo "  enable_scheduler     - Enable EventBridge scheduler"
+    echo "  disable_scheduler    - Disable EventBridge scheduler"
     echo ""
     echo "Examples:"
-    echo "  $0 start             # Start with default capacity (2)"
-    echo "  $0 start 5           # Start with capacity of 5"
-    echo "  $0 stop              # Stop the fleet"
+    echo "  $0 start             # Start with default capacity (2) and enable scheduler"
+    echo "  $0 start 5           # Start with capacity of 5 and enable scheduler"
+    echo "  $0 stop              # Stop the fleet and disable scheduler"
     echo "  $0 status            # Show current status"
     echo "  $0 monitor           # Monitor fleet metrics"
     echo "  $0 switch_to_fleet   # Switch projects to use fleet"
     echo "  $0 switch_to_ondemand # Switch ALL projects to on-demand"
     echo "  PROJECT_NAMES='runner-BJST,runner-aws-codebuild-docker-image' $0 switch_to_ondemand # Switch specific projects"
+    echo "  $0 enable_scheduler  # Enable EventBridge scheduler"
+    echo "  $0 disable_scheduler # Disable EventBridge scheduler"
     echo ""
     echo "Environment variables:"
     echo "  PROJECT_NAMES        - Comma-separated list of CodeBuild project names for switch commands (optional for switch_to_ondemand)"
+    echo "  SCHEDULE_TYPE        - Schedule type for scheduled_control (business_hours/weekend/custom/smart, default: business_hours)"
 }
 
 # Function to check if AWS CLI is available
@@ -323,6 +329,77 @@ switch_to_ondemand() {
     fi
 }
 
+# Function to run scheduled control
+scheduled_control() {
+    print_status "Running scheduled fleet control"
+
+    # Default to business hours if no schedule type specified
+    SCHEDULE_TYPE=${SCHEDULE_TYPE:-"business_hours"}
+
+    print_status "Using schedule type: $SCHEDULE_TYPE"
+
+    aws lambda invoke \
+        --function-name "$LAMBDA_FUNCTION_NAME" \
+        --region "$AWS_REGION" \
+        --payload "{\"action\": \"scheduled_control\", \"schedule_type\": \"$SCHEDULE_TYPE\"}" \
+        --cli-binary-format raw-in-base64-out \
+        /tmp/fleet_response.json
+
+    if [ $? -eq 0 ]; then
+        print_success "Scheduled control completed successfully"
+        echo "Response:"
+        cat /tmp/fleet_response.json | jq -r '.body' | jq .
+        rm -f /tmp/fleet_response.json
+    else
+        print_error "Failed to run scheduled control"
+        exit 1
+    fi
+}
+
+# Function to enable scheduler
+enable_scheduler() {
+    print_status "Enabling EventBridge scheduler"
+
+    aws lambda invoke \
+        --function-name "$LAMBDA_FUNCTION_NAME" \
+        --region "$AWS_REGION" \
+        --payload "{\"action\": \"enable_scheduler\"}" \
+        --cli-binary-format raw-in-base64-out \
+        /tmp/fleet_response.json
+
+    if [ $? -eq 0 ]; then
+        print_success "Scheduler enabled successfully"
+        echo "Response:"
+        cat /tmp/fleet_response.json | jq -r '.body' | jq .
+        rm -f /tmp/fleet_response.json
+    else
+        print_error "Failed to enable scheduler"
+        exit 1
+    fi
+}
+
+# Function to disable scheduler
+disable_scheduler() {
+    print_status "Disabling EventBridge scheduler"
+
+    aws lambda invoke \
+        --function-name "$LAMBDA_FUNCTION_NAME" \
+        --region "$AWS_REGION" \
+        --payload "{\"action\": \"disable_scheduler\"}" \
+        --cli-binary-format raw-in-base64-out \
+        /tmp/fleet_response.json
+
+    if [ $? -eq 0 ]; then
+        print_success "Scheduler disabled successfully"
+        echo "Response:"
+        cat /tmp/fleet_response.json | jq -r '.body' | jq .
+        rm -f /tmp/fleet_response.json
+    else
+        print_error "Failed to disable scheduler"
+        exit 1
+    fi
+}
+
 # Main script logic
 main() {
     # Check prerequisites
@@ -350,6 +427,15 @@ main() {
             ;;
         switch_to_ondemand)
             switch_to_ondemand
+            ;;
+        scheduled_control)
+            scheduled_control
+            ;;
+        enable_scheduler)
+            enable_scheduler
+            ;;
+        disable_scheduler)
+            disable_scheduler
             ;;
         *)
             show_usage

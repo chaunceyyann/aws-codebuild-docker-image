@@ -179,6 +179,15 @@ module "fleet_controller" {
             "codebuild:UpdateProject"
           ]
           Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "events:EnableRule",
+            "events:DisableRule",
+            "events:DescribeRule"
+          ]
+          Resource = "arn:aws:events:${var.aws_region}:${data.aws_caller_identity.current.account_id}:rule/${var.fleet_name}-schedule"
         }
       ]
     })

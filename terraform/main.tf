@@ -18,6 +18,8 @@ module "compute_fleet" {
   security_group_id  = aws_security_group.codebuild_sg.id
   aws_region         = var.aws_region
   tags               = var.tags
+  enable_scheduled_control = true
+  schedule_expression = "cron(0 8,12,16,20 * * ? *)"  # 8 AM, 12 PM, 4 PM, 8 PM UTC daily
 
   depends_on = [module.vpc, aws_security_group.codebuild_sg]
 }
