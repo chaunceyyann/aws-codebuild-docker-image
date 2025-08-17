@@ -2,6 +2,28 @@
 
 # This file contains the main module calls for the CodeBuild infrastructure
 
+# Compute Fleet for CodeBuild runners
+module "compute_fleet" {
+  source = "./modules/compute-fleet"
+
+  fleet_name         = "codebuild-runners-fleet"
+  base_capacity      = var.fleet_base_capacity
+  target_capacity    = var.fleet_target_capacity
+  max_capacity       = var.fleet_max_capacity
+  min_capacity       = var.fleet_min_capacity
+  environment_type   = "LINUX_CONTAINER"
+  compute_type       = "BUILD_GENERAL1_SMALL"
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  security_group_id  = aws_security_group.codebuild_sg.id
+  aws_region         = var.aws_region
+  tags               = var.tags
+  enable_scheduled_control = true
+  schedule_expression = "cron(0 8,12,16,20 * * ? *)"  # 8 AM, 12 PM, 4 PM, 8 PM UTC daily
+
+  depends_on = [module.vpc, aws_security_group.codebuild_sg]
+}
+
 # CodeArtifact module for package management
 module "codeartifact" {
   source = "./modules/codeartifact"
@@ -121,12 +143,16 @@ module "codebuild_runners" {
   ]
 
   environment_type = "LINUX_CONTAINER"
-  compute_type     = "BUILD_GENERAL1_MEDIUM"
+                compute_type     = "BUILD_GENERAL1_SMALL"
   privileged_mode  = false
+
+  # Use compute fleet if enabled
+  use_compute_fleet   = var.enable_fleet_for_runners
+  compute_fleet_arn   = var.enable_fleet_for_runners ? module.compute_fleet.fleet_arn : null
 
   environment_variables = []
 
-  depends_on = [module.ecr]
+  depends_on = [module.ecr, module.compute_fleet]
 }
 
 # New CodeBuild project for YAML Validator Runner
@@ -145,7 +171,7 @@ module "codebuild_yaml_validator" {
   buildspec_path        = "container-yaml-validator/buildspec.yml" # Path for YAML validator buildspec
   ecr_repo_name         = var.ecr_repo_name                        # Not used for pushing, just to satisfy module requirement
   environment_type      = "LINUX_CONTAINER"
-  compute_type          = "BUILD_GENERAL1_MEDIUM" # Medium compute for runner tasks
+                compute_type          = "BUILD_GENERAL1_SMALL" # Small compute for runner tasks
   privileged_mode       = false                   # No Docker needed for this runner
   codebuild_role_arn    = aws_iam_role.codebuild_role.arn
   codebuild_sg_id       = aws_security_group.codebuild_sg.id

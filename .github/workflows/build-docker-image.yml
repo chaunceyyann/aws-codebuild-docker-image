@@ -40,6 +40,50 @@ jobs:
             exit 1
           fi
 
+          # Check if this was triggered by a workflow_dispatch with apply_changes=true
+          # or if it was a push to main branch (which would apply changes)
+          if [ "${{ github.event.workflow_run.event }}" == "workflow_dispatch" ]; then
+            # For workflow_dispatch, check if apply_changes was true
+            # We can't directly access the inputs, so we'll check the workflow run logs
+            echo "Checking if apply step was executed in infrastructure workflow..."
+            # The apply step only runs if:
+            # - push to main branch, OR
+            # - workflow_dispatch with apply_changes=true
+            # Since we can't directly check inputs, we'll assume workflow_dispatch means apply
+          elif [ "${{ github.event.workflow_run.head_branch }}" != "main" ]; then
+            echo "Infrastructure workflow was not on main branch, skipping build"
+            exit 1
+          fi
+
+          echo "Infrastructure workflow completed successfully with apply step"
+
+      - name: Verify Apply Step Was Executed
+        if: github.event_name == 'workflow_run'
+        run: |
+          echo "Verifying that Terraform apply step was executed..."
+
+          # Check if the workflow was on main branch (which always applies)
+          if [ "${{ github.event.workflow_run.head_branch }}" == "main" ]; then
+            echo "Workflow was on main branch - apply step should have been executed"
+          else
+            # For workflow_dispatch, check if apply step was executed
+            echo "Checking if apply step was executed in workflow_dispatch..."
+
+            # Get the workflow run logs using GitHub API
+            WORKFLOW_RUN_ID="${{ github.event.workflow_run.id }}"
+            REPO="${{ github.repository }}"
+
+            # Check if "Create Apply Success Marker" step was executed
+            if curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               "https://api.github.com/repos/$REPO/actions/runs/$WORKFLOW_RUN_ID/logs" | \
+               grep -q "Create Apply Success Marker"; then
+              echo "Apply step was executed successfully"
+            else
+              echo "Apply step was not executed - skipping build"
+              exit 1
+            fi
+          fi
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 

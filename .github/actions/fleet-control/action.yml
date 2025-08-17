@@ -1,0 +1,110 @@
+name: 'CodeBuild Fleet Control'
+description: 'Control AWS CodeBuild compute fleet from GitHub Actions'
+
+inputs:
+  action:
+    description: 'Fleet control action to perform'
+    required: true
+    default: 'status'
+  target_capacity:
+    description: 'Target capacity for start action (default: 2)'
+    required: false
+    default: '2'
+  project_names:
+    description: 'Comma-separated list of CodeBuild project names for switch actions'
+    required: false
+    default: ''
+  schedule_type:
+    description: 'Schedule type for scheduled_control (business_hours/weekend/custom/smart)'
+    required: false
+    default: 'business_hours'
+  aws_region:
+    description: 'AWS region for the fleet'
+    required: false
+    default: 'us-east-1'
+  fleet_name:
+    description: 'Name of the CodeBuild fleet'
+    required: false
+    default: 'codebuild-runners-fleet'
+  lambda_function_name:
+    description: 'Name of the Lambda function for fleet control'
+    required: false
+    default: 'codebuild-runners-fleet-controller'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Configure AWS credentials'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: 'Run fleet control action'
+      shell: bash
+      run: |
+        # Set environment variables
+        export AWS_REGION="${{ inputs.aws_region }}"
+        export LAMBDA_FUNCTION_NAME="${{ inputs.lambda_function_name }}"
+
+        # Set optional environment variables
+        if [ -n "${{ inputs.project_names }}" ]; then
+          export PROJECT_NAMES="${{ inputs.project_names }}"
+        fi
+
+        if [ -n "${{ inputs.schedule_type }}" ]; then
+          export SCHEDULE_TYPE="${{ inputs.schedule_type }}"
+        fi
+
+        # Determine the command to run
+        ACTION="${{ inputs.action }}"
+        TARGET_CAPACITY="${{ inputs.target_capacity }}"
+
+        case $ACTION in
+          "start")
+            echo "Starting fleet with capacity: $TARGET_CAPACITY"
+            bash scripts/fleet_control.sh start $TARGET_CAPACITY
+            ;;
+          "stop")
+            echo "Stopping fleet"
+            bash scripts/fleet_control.sh stop
+            ;;
+          "status")
+            echo "Checking fleet status"
+            bash scripts/fleet_control.sh status
+            ;;
+          "monitor")
+            echo "Monitoring fleet (30 seconds)"
+            timeout 30s bash scripts/fleet_control.sh monitor || true
+            ;;
+          "init")
+            echo "Initializing fleet"
+            bash scripts/fleet_control.sh init
+            ;;
+          "switch_to_fleet")
+            echo "Switching projects to fleet"
+            bash scripts/fleet_control.sh switch_to_fleet
+            ;;
+          "switch_to_ondemand")
+            echo "Switching projects to on-demand"
+            bash scripts/fleet_control.sh switch_to_ondemand
+            ;;
+          "scheduled_control")
+            echo "Running scheduled control"
+            bash scripts/fleet_control.sh scheduled_control
+            ;;
+          "enable_scheduler")
+            echo "Enabling scheduler"
+            bash scripts/fleet_control.sh enable_scheduler
+            ;;
+          "disable_scheduler")
+            echo "Disabling scheduler"
+            bash scripts/fleet_control.sh disable_scheduler
+            ;;
+          *)
+            echo "Unknown action: $ACTION"
+            bash scripts/fleet_control.sh
+            exit 1
+            ;;
+        esac
