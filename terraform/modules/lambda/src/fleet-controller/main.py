@@ -66,8 +66,23 @@ def lambda_handler(event, context):
 def start_fleet(fleet_name, target_capacity):
     """Start the fleet by setting target capacity"""
     try:
-        response = codebuild.update_fleet(
-            name=fleet_name, scalingConfiguration={"targetCapacity": target_capacity}
+        # First get the fleet ARN
+        fleet_response = codebuild.batch_get_fleets(names=[fleet_name])
+        if not fleet_response.get("fleets"):
+            raise ValueError(f"Fleet {fleet_name} not found")
+
+        fleet_arn = fleet_response["fleets"][0]["arn"]
+
+        # Update the fleet with target capacity
+        codebuild.update_fleet(
+            arn=fleet_arn,
+            scalingConfiguration={
+                "scalingType": "TARGET_TRACKING_SCALING",
+                "targetTrackingScalingConfigs": [
+                    {"metricType": "FLEET_UTILIZATION_RATE", "targetValue": 0.7}
+                ],
+                "maxCapacity": target_capacity,
+            },
         )
 
         logger.info(
@@ -92,8 +107,23 @@ def start_fleet(fleet_name, target_capacity):
 def stop_fleet(fleet_name, target_capacity):
     """Stop the fleet by setting target capacity to 0"""
     try:
-        response = codebuild.update_fleet(
-            name=fleet_name, scalingConfiguration={"targetCapacity": target_capacity}
+        # First get the fleet ARN
+        fleet_response = codebuild.batch_get_fleets(names=[fleet_name])
+        if not fleet_response.get("fleets"):
+            raise ValueError(f"Fleet {fleet_name} not found")
+
+        fleet_arn = fleet_response["fleets"][0]["arn"]
+
+        # Update the fleet with target capacity
+        codebuild.update_fleet(
+            arn=fleet_arn,
+            scalingConfiguration={
+                "scalingType": "TARGET_TRACKING_SCALING",
+                "targetTrackingScalingConfigs": [
+                    {"metricType": "FLEET_UTILIZATION_RATE", "targetValue": 0.7}
+                ],
+                "maxCapacity": target_capacity,
+            },
         )
 
         logger.info(
@@ -149,8 +179,23 @@ def get_fleet_status(fleet_name):
 def init_fleet(fleet_name, target_capacity):
     """Initialize the fleet with initial scaling configuration"""
     try:
-        response = codebuild.update_fleet(
-            name=fleet_name, scalingConfiguration={"targetCapacity": target_capacity}
+        # First get the fleet ARN
+        fleet_response = codebuild.batch_get_fleets(names=[fleet_name])
+        if not fleet_response.get("fleets"):
+            raise ValueError(f"Fleet {fleet_name} not found")
+
+        fleet_arn = fleet_response["fleets"][0]["arn"]
+
+        # Update the fleet with target capacity
+        codebuild.update_fleet(
+            arn=fleet_arn,
+            scalingConfiguration={
+                "scalingType": "TARGET_TRACKING_SCALING",
+                "targetTrackingScalingConfigs": [
+                    {"metricType": "FLEET_UTILIZATION_RATE", "targetValue": 0.7}
+                ],
+                "maxCapacity": target_capacity,
+            },
         )
 
         logger.info(
