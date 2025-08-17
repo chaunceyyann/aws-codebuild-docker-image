@@ -36,21 +36,29 @@ print_error() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 {start|stop|status|monitor|init} [target_capacity]"
+    echo "Usage: $0 {start|stop|status|monitor|init|switch_to_fleet|switch_to_ondemand} [target_capacity]"
     echo ""
     echo "Commands:"
-    echo "  start [capacity]  - Start the fleet with optional target capacity (default: 2)"
-    echo "  stop              - Stop the fleet (set capacity to 0)"
-    echo "  status            - Show current fleet status"
-    echo "  monitor           - Monitor fleet metrics in real-time"
-    echo "  init              - Initialize fleet scaling configuration"
+    echo "  start [capacity]     - Start the fleet with optional target capacity (default: 2)"
+    echo "  stop                 - Stop the fleet (set capacity to minimum)"
+    echo "  status               - Show current fleet status"
+    echo "  monitor              - Monitor fleet metrics in real-time"
+    echo "  init                 - Initialize fleet scaling configuration"
+    echo "  switch_to_fleet      - Switch CodeBuild projects to use fleet"
+    echo "  switch_to_ondemand   - Switch CodeBuild projects back to on-demand (all if no PROJECT_NAMES)"
     echo ""
     echo "Examples:"
-    echo "  $0 start          # Start with default capacity (2)"
-    echo "  $0 start 5        # Start with capacity of 5"
-    echo "  $0 stop           # Stop the fleet"
-    echo "  $0 status         # Show current status"
-    echo "  $0 monitor        # Monitor fleet metrics"
+    echo "  $0 start             # Start with default capacity (2)"
+    echo "  $0 start 5           # Start with capacity of 5"
+    echo "  $0 stop              # Stop the fleet"
+    echo "  $0 status            # Show current status"
+    echo "  $0 monitor           # Monitor fleet metrics"
+    echo "  $0 switch_to_fleet   # Switch projects to use fleet"
+    echo "  $0 switch_to_ondemand # Switch ALL projects to on-demand"
+    echo "  PROJECT_NAMES='runner-BJST,runner-aws-codebuild-docker-image' $0 switch_to_ondemand # Switch specific projects"
+    echo ""
+    echo "Environment variables:"
+    echo "  PROJECT_NAMES        - Comma-separated list of CodeBuild project names for switch commands (optional for switch_to_ondemand)"
 }
 
 # Function to check if AWS CLI is available
@@ -248,6 +256,73 @@ monitor_basic() {
     done
 }
 
+# Function to switch projects to fleet
+switch_to_fleet() {
+    print_status "Switching CodeBuild projects to use fleet"
+
+    if [ -z "$PROJECT_NAMES" ]; then
+        print_error "PROJECT_NAMES environment variable is required"
+        print_error "Example: PROJECT_NAMES='runner-BJST,runner-aws-codebuild-docker-image' $0 switch_to_fleet"
+        exit 1
+    fi
+
+    # Convert comma-separated list to JSON array
+    project_names_json=$(echo "$PROJECT_NAMES" | tr ',' '\n' | jq -R . | jq -s .)
+
+    aws lambda invoke \
+        --function-name "$LAMBDA_FUNCTION_NAME" \
+        --region "$AWS_REGION" \
+        --payload "{\"action\": \"switch_to_fleet\", \"project_names\": $project_names_json}" \
+        --cli-binary-format raw-in-base64-out \
+        /tmp/fleet_response.json
+
+    if [ $? -eq 0 ]; then
+        print_success "Projects switched to fleet successfully"
+        echo "Response:"
+        cat /tmp/fleet_response.json | jq -r '.body' | jq .
+        rm -f /tmp/fleet_response.json
+    else
+        print_error "Failed to switch projects to fleet"
+        exit 1
+    fi
+}
+
+# Function to switch projects to on-demand
+switch_to_ondemand() {
+    print_status "Switching CodeBuild projects to on-demand compute"
+
+    if [ -z "$PROJECT_NAMES" ]; then
+        print_warning "PROJECT_NAMES not provided, switching ALL GitHub projects to on-demand"
+        aws lambda invoke \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --region "$AWS_REGION" \
+            --payload '{"action": "switch_to_ondemand"}' \
+            --cli-binary-format raw-in-base64-out \
+            /tmp/fleet_response.json
+    else
+        print_status "Switching specified projects to on-demand compute"
+        # Convert comma-separated list to JSON array
+        project_names_json=$(echo "$PROJECT_NAMES" | tr ',' '\n' | jq -R . | jq -s .)
+
+        aws lambda invoke \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --region "$AWS_REGION" \
+            --payload "{\"action\": \"switch_to_ondemand\", \"project_names\": $project_names_json}" \
+            --cli-binary-format raw-in-base64-out \
+            /tmp/fleet_response.json
+    fi
+
+    if [ $? -eq 0 ]; then
+        print_success "Projects switched to on-demand compute successfully"
+        echo "Response:"
+        cat /tmp/fleet_response.json | jq -r '.body' | jq .
+        rm -f /tmp/fleet_response.json
+    else
+        print_error "Failed to switch projects to on-demand compute"
+        exit 1
+    fi
+}
+
 # Main script logic
 main() {
     # Check prerequisites
@@ -269,6 +344,12 @@ main() {
             ;;
         init)
             init_fleet
+            ;;
+        switch_to_fleet)
+            switch_to_fleet
+            ;;
+        switch_to_ondemand)
+            switch_to_ondemand
             ;;
         *)
             show_usage

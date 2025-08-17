@@ -136,8 +136,9 @@ module "fleet_controller" {
 
   environment_variables = {
     FLEET_NAME = aws_codebuild_fleet.main.name
+    FLEET_ARN  = aws_codebuild_fleet.main.arn
     TARGET_CAPACITY_ON  = var.target_capacity
-    TARGET_CAPACITY_OFF = 0
+    TARGET_CAPACITY_OFF = 1
   }
 
   create_role = false
@@ -163,6 +164,21 @@ module "fleet_controller" {
             "codebuild:BatchGetFleets"
           ]
           Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:fleet/${var.fleet_name}:*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "codebuild:ListProjects"
+          ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "codebuild:BatchGetProjects",
+            "codebuild:UpdateProject"
+          ]
+          Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/*"
         }
       ]
     })
