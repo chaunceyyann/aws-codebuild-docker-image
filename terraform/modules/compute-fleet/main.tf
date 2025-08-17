@@ -28,7 +28,7 @@ resource "null_resource" "init_fleet" {
   depends_on = [module.fleet_controller]
 
   provisioner "local-exec" {
-    command = "aws lambda invoke --function-name ${module.fleet_controller.function_name} --payload '{\"action\": \"init\"}' --region ${var.aws_region} /tmp/fleet_init_response.json"
+    command = "aws lambda invoke --function-name ${module.fleet_controller.function_name} --payload '{\"action\": \"init\"}' --cli-binary-format raw-in-base64-out --region ${var.aws_region} /tmp/fleet_init_response.json"
   }
 }
 
