@@ -12,7 +12,7 @@ module "compute_fleet" {
   max_capacity       = var.fleet_max_capacity
   min_capacity       = var.fleet_min_capacity
   environment_type   = "LINUX_CONTAINER"
-  compute_type       = "BUILD_GENERAL1_MEDIUM"
+  compute_type       = "BUILD_GENERAL1_SMALL"
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   security_group_id  = aws_security_group.codebuild_sg.id
@@ -141,7 +141,7 @@ module "codebuild_runners" {
   ]
 
   environment_type = "LINUX_CONTAINER"
-  compute_type     = "BUILD_GENERAL1_MEDIUM"
+                compute_type     = "BUILD_GENERAL1_SMALL"
   privileged_mode  = false
 
   # Use compute fleet if enabled
@@ -169,7 +169,7 @@ module "codebuild_yaml_validator" {
   buildspec_path        = "container-yaml-validator/buildspec.yml" # Path for YAML validator buildspec
   ecr_repo_name         = var.ecr_repo_name                        # Not used for pushing, just to satisfy module requirement
   environment_type      = "LINUX_CONTAINER"
-  compute_type          = "BUILD_GENERAL1_MEDIUM" # Medium compute for runner tasks
+                compute_type          = "BUILD_GENERAL1_SMALL" # Small compute for runner tasks
   privileged_mode       = false                   # No Docker needed for this runner
   codebuild_role_arn    = aws_iam_role.codebuild_role.arn
   codebuild_sg_id       = aws_security_group.codebuild_sg.id

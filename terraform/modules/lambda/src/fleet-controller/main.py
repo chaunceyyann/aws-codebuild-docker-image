@@ -298,7 +298,7 @@ def switch_projects_to_fleet(project_names, fleet_arn):
                 name=project_name,
                 environment={
                     "type": environment["type"],
-                    "computeType": "BUILD_GENERAL1_SMALL",  # Required for fleet
+                    "computeType": "BUILD_GENERAL1_SMALL",  # Small compute for fleet
                     "image": environment["image"],
                     "imagePullCredentialsType": environment.get(
                         "imagePullCredentialsType"
@@ -360,7 +360,7 @@ def switch_projects_to_ondemand(project_names):
                 name=project_name,
                 environment={
                     "type": environment["type"],
-                    "computeType": "BUILD_GENERAL1_MEDIUM",  # Back to original compute type
+                    "computeType": "BUILD_GENERAL1_SMALL",  # Small compute for on-demand
                     "image": environment["image"],
                     "imagePullCredentialsType": environment.get(
                         "imagePullCredentialsType"

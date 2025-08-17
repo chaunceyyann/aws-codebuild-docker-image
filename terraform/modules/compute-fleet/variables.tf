@@ -20,7 +20,7 @@ variable "environment_type" {
 variable "compute_type" {
   description = "Compute type for the compute fleet"
   type        = string
-  default     = "BUILD_GENERAL1_MEDIUM"
+  default     = "BUILD_GENERAL1_SMALL"
 }
 
 variable "vpc_id" {
