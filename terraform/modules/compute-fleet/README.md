@@ -123,6 +123,32 @@ SCHEDULE_TYPE=weekend ./scripts/fleet_control.sh scheduled_control
 ./scripts/fleet_control.sh disable_scheduler
 ```
 
+### **Using GitHub Actions**
+
+#### **Manual Fleet Control Workflow**
+Go to **Actions** → **Fleet Control** → **Run workflow** to manually control the fleet:
+
+- **Action**: Choose from status, start, stop, monitor, etc.
+- **Target Capacity**: Set capacity for start action
+- **Project Names**: Specify projects for switch actions
+- **Schedule Type**: Choose schedule type for scheduled_control
+
+**Note**: Automated fleet control is handled by EventBridge + Lambda, not GitHub Actions.
+
+#### **Using in Other Workflows**
+```yaml
+- name: 'Start fleet for build'
+  uses: ./.github/actions/fleet-control
+  with:
+    action: 'start'
+    target_capacity: '3'
+
+- name: 'Stop fleet after build'
+  uses: ./.github/actions/fleet-control
+  with:
+    action: 'stop'
+```
+
 ### **Using AWS CLI**
 ```bash
 # Start fleet
