@@ -47,6 +47,7 @@ runs:
         # Set environment variables
         export AWS_REGION="${{ inputs.aws_region }}"
         export LAMBDA_FUNCTION_NAME="${{ inputs.lambda_function_name }}"
+        export GITHUB_ACTIONS="true"
 
         # Set optional environment variables
         if [ -n "${{ inputs.project_names }}" ]; then
@@ -108,3 +109,8 @@ runs:
             exit 1
             ;;
         esac
+
+        # Preserve Lambda response for workflow summary
+        if [ -f "/tmp/fleet_response.json" ]; then
+          echo "Lambda response preserved for workflow summary"
+        fi
