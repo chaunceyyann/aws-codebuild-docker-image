@@ -64,6 +64,7 @@ jobs:
           sudo apt-get install -y jq
 
       - name: 'Run fleet control action'
+        id: fleet-control
         uses: ./.github/actions/fleet-control
         with:
           action: ${{ github.event.inputs.action }}
@@ -88,3 +89,12 @@ jobs:
           fi
           echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Display Lambda function output if available
+          if [ -f "/tmp/fleet_response.json" ]; then
+            echo "**Lambda Response:**" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat /tmp/fleet_response.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi

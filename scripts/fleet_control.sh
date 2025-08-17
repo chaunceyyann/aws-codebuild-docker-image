@@ -101,7 +101,12 @@ start_fleet() {
         print_success "Fleet start command sent successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to start fleet"
         exit 1
@@ -123,7 +128,12 @@ stop_fleet() {
         print_success "Fleet stop command sent successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to stop fleet"
         exit 1
@@ -145,7 +155,12 @@ get_fleet_status() {
         print_success "Fleet status retrieved successfully"
         echo "Status:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to get fleet status"
         exit 1
@@ -167,7 +182,12 @@ init_fleet() {
         print_success "Fleet initialization completed successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to initialize fleet"
         exit 1
@@ -286,7 +306,12 @@ switch_to_fleet() {
         print_success "Projects switched to fleet successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to switch projects to fleet"
         exit 1
@@ -322,7 +347,12 @@ switch_to_ondemand() {
         print_success "Projects switched to on-demand compute successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to switch projects to on-demand compute"
         exit 1
@@ -349,7 +379,12 @@ scheduled_control() {
         print_success "Scheduled control completed successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to run scheduled control"
         exit 1
@@ -371,7 +406,12 @@ enable_scheduler() {
         print_success "Scheduler enabled successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to enable scheduler"
         exit 1
@@ -393,7 +433,12 @@ disable_scheduler() {
         print_success "Scheduler disabled successfully"
         echo "Response:"
         cat /tmp/fleet_response.json | jq -r '.body' | jq .
-        rm -f /tmp/fleet_response.json
+        # Preserve response file for GitHub Actions workflow summary
+        if [ "$GITHUB_ACTIONS" = "true" ]; then
+            echo "Response file preserved for workflow summary"
+        else
+            rm -f /tmp/fleet_response.json
+        fi
     else
         print_error "Failed to disable scheduler"
         exit 1
