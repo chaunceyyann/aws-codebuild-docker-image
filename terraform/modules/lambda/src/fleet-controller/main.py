@@ -66,8 +66,8 @@ def lambda_handler(event, context):
 def start_fleet(fleet_name, target_capacity):
     """Start the fleet by setting target capacity"""
     try:
-        response = codebuild.update_fleet_scaling_configuration(
-            fleetName=fleet_name, targetCapacity=target_capacity
+        response = codebuild.update_fleet(
+            name=fleet_name, scalingConfiguration={"targetCapacity": target_capacity}
         )
 
         logger.info(
@@ -92,8 +92,8 @@ def start_fleet(fleet_name, target_capacity):
 def stop_fleet(fleet_name, target_capacity):
     """Stop the fleet by setting target capacity to 0"""
     try:
-        response = codebuild.update_fleet_scaling_configuration(
-            fleetName=fleet_name, targetCapacity=target_capacity
+        response = codebuild.update_fleet(
+            name=fleet_name, scalingConfiguration={"targetCapacity": target_capacity}
         )
 
         logger.info(
@@ -118,9 +118,12 @@ def stop_fleet(fleet_name, target_capacity):
 def get_fleet_status(fleet_name):
     """Get the current status of the fleet"""
     try:
-        response = codebuild.describe_fleet(fleetName=fleet_name)
+        response = codebuild.batch_get_fleets(names=[fleet_name])
 
-        fleet_info = response["fleet"]
+        if not response.get("fleets"):
+            raise ValueError(f"Fleet {fleet_name} not found")
+
+        fleet_info = response["fleets"][0]
         scaling_config = fleet_info.get("scalingConfiguration", {})
 
         status = {
@@ -146,8 +149,8 @@ def get_fleet_status(fleet_name):
 def init_fleet(fleet_name, target_capacity):
     """Initialize the fleet with initial scaling configuration"""
     try:
-        response = codebuild.update_fleet_scaling_configuration(
-            fleetName=fleet_name, targetCapacity=target_capacity
+        response = codebuild.update_fleet(
+            name=fleet_name, scalingConfiguration={"targetCapacity": target_capacity}
         )
 
         logger.info(
