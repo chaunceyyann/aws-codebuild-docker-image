@@ -92,3 +92,9 @@ jobs:
             -var="code_scanner_project_name=code-scanner-4codebuild" \
             -var="base_image_version=${{ env.BASE_IMAGE_VERSION }}" \
             -var="scanner_image_version=${{ env.SCANNER_IMAGE_VERSION }}"
+
+      - name: Create Apply Success Marker
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.apply_changes == true)
+        run: |
+          echo "APPLY_SUCCESS=true" >> $GITHUB_ENV
+          echo "Apply completed successfully at $(date)" > apply_success_marker.txt
