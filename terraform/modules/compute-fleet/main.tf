@@ -156,8 +156,8 @@ module "fleet_controller" {
         {
           Effect = "Allow"
           Action = [
-            "codebuild:UpdateFleetScalingConfiguration",
-            "codebuild:DescribeFleet"
+            "codebuild:UpdateFleet",
+            "codebuild:BatchGetFleets"
           ]
           Resource = aws_codebuild_fleet.main.arn
         }
@@ -187,6 +187,8 @@ resource "aws_iam_role" "lambda_role" {
 
   tags = var.tags
 }
+
+
 
 
 

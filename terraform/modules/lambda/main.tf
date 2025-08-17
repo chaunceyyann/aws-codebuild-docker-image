@@ -94,10 +94,10 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc" {
 
 # Custom IAM policies
 resource "aws_iam_role_policy" "lambda_custom" {
-  for_each = var.create_role ? var.custom_policies : {}
+  for_each = var.custom_policies
 
   name = "${var.function_name}-${each.key}"
-  role = aws_iam_role.lambda_role[0].id
+  role = var.create_role ? aws_iam_role.lambda_role[0].id : split("/", var.role_arn)[length(split("/", var.role_arn)) - 1]
 
   policy = each.value
 }
