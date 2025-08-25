@@ -119,6 +119,29 @@ resource "aws_iam_role_policy" "codebuild_policy" {
             "sts:AWSServiceName" = "codeartifact.amazonaws.com"
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "codebuild:UpdateFleet",
+          "codebuild:BatchGetFleets",
+          "codebuild:DescribeFleet",
+          "codebuild:ListFleets"
+        ]
+        Resource = [
+          "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:fleet/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "codebuild:BatchGetProjects",
+          "codebuild:UpdateProject",
+          "codebuild:ListProjects"
+        ]
+        Resource = [
+          "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/runner-*"
+        ]
       }
     ]
   })
