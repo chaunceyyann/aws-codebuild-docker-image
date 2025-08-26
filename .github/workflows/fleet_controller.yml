@@ -1,0 +1,180 @@
+name: 'Fleet Controller'
+
+on:
+    # Automated fleet scaling schedules (Eastern Time)
+  schedule:
+    # Weekend: Set fleet to minimum capacity (1)
+    # Saturday 12:00 AM ET = 4:00/5:00 AM UTC (EST/EDT)
+    - cron: '0 4 * * SAT'   # EST
+    - cron: '0 5 * * SAT'   # EDT
+
+    # Wednesday night: Scale up for high demand (30)
+    # Wednesday 10:00 PM ET = Thursday 2:00/3:00 AM UTC
+    - cron: '0 2 * * THU'   # EST
+    - cron: '0 3 * * THU'   # EDT
+
+    # Thursday morning: Scale back to workday normal (10)
+    # Thursday 4:00 AM ET = 8:00/9:00 AM UTC
+    - cron: '0 8 * * THU'   # EST
+    - cron: '0 9 * * THU'   # EDT
+
+  # Manual trigger with fleet size input
+  workflow_dispatch:
+    inputs:
+      desired_fleet_size:
+        description: 'Desired fleet size'
+        required: true
+        default: '10'
+        type: string
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: 'us-east-1'
+  FLEET_NAME: 'codebuild-runners-fleet'
+
+jobs:
+  fleet-control:
+    name: 'Fleet Control'
+    runs-on: ${{ format('codebuild-runner-{0}-{1}-{2}', github.event.repository.name, github.run_id, github.run_attempt) }}
+
+    steps:
+      - name: 'Determine fleet size based on trigger'
+        id: determine-size
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Manual trigger: Use provided fleet size
+            FLEET_SIZE="${{ github.event.inputs.desired_fleet_size }}"
+            REASON="Manual trigger by ${{ github.actor }}"
+            echo "🎯 Manual: Fleet size = $FLEET_SIZE"
+          else
+            # Scheduled trigger: Determine size based on current time
+            HOUR=$(date -u +%H)
+            DAY=$(date -u +%u)  # 1=Monday, 7=Sunday
+
+            echo "🕐 UTC: $(date -u), Day: $DAY, Hour: $HOUR"
+
+            if [ "$DAY" -eq 6 ] || [ "$DAY" -eq 7 ]; then
+              # Weekend: Minimum capacity
+              FLEET_SIZE="1"
+              REASON="Weekend schedule"
+              echo "🌅 Weekend: Fleet size = $FLEET_SIZE"
+            elif [ "$DAY" -eq 4 ] && ([ "$HOUR" -eq 2 ] || [ "$HOUR" -eq 3 ]); then
+              # Wednesday night: High capacity
+              FLEET_SIZE="30"
+              REASON="Wednesday night high-load schedule"
+              echo "🌙 Wednesday night: Fleet size = $FLEET_SIZE"
+            elif [ "$DAY" -ge 1 ] && [ "$DAY" -le 5 ]; then
+              # Workdays (Monday-Friday): Standard capacity
+              FLEET_SIZE="10"
+              REASON="Workday schedule"
+              echo "💼 Workday: Fleet size = $FLEET_SIZE"
+            else
+              # Default fallback
+              FLEET_SIZE="10"
+              REASON="Default schedule"
+              echo "⚙️ Default: Fleet size = $FLEET_SIZE"
+            fi
+          fi
+
+          # Export for next steps
+          echo "fleet_size=$FLEET_SIZE" >> $GITHUB_OUTPUT
+          echo "reason=$REASON" >> $GITHUB_OUTPUT
+
+      - name: 'Get current fleet status'
+        id: current-status
+        run: |
+          echo "🔍 Checking current fleet status..."
+
+          # Get current fleet information
+          CURRENT_CAPACITY=$(aws codebuild batch-get-fleets \
+            --names "$FLEET_NAME" \
+            --region "$AWS_DEFAULT_REGION" \
+            --query 'fleets[0].baseCapacity' \
+            --output text)
+
+          FLEET_STATUS=$(aws codebuild batch-get-fleets \
+            --names "$FLEET_NAME" \
+            --region "$AWS_DEFAULT_REGION" \
+            --query 'fleets[0].status.statusCode' \
+            --output text)
+
+          FLEET_ARN=$(aws codebuild batch-get-fleets \
+            --names "$FLEET_NAME" \
+            --region "$AWS_DEFAULT_REGION" \
+            --query 'fleets[0].arn' \
+            --output text)
+
+          echo "📊 Current capacity: $CURRENT_CAPACITY"
+          echo "🟢 Fleet status: $FLEET_STATUS"
+
+          # Export for next steps
+          echo "current_capacity=$CURRENT_CAPACITY" >> $GITHUB_OUTPUT
+          echo "fleet_status=$FLEET_STATUS" >> $GITHUB_OUTPUT
+          echo "fleet_arn=$FLEET_ARN" >> $GITHUB_OUTPUT
+
+      - name: 'Update fleet capacity'
+        run: |
+          TARGET_SIZE="${{ steps.determine-size.outputs.fleet_size }}"
+          CURRENT_SIZE="${{ steps.current-status.outputs.current_capacity }}"
+          FLEET_ARN="${{ steps.current-status.outputs.fleet_arn }}"
+
+          echo "🎯 Target capacity: $TARGET_SIZE"
+          echo "📊 Current capacity: $CURRENT_SIZE"
+
+          if [ "$TARGET_SIZE" -eq "$CURRENT_SIZE" ]; then
+            echo "✅ Fleet already at target capacity ($TARGET_SIZE)"
+          else
+            echo "🔄 Updating fleet capacity from $CURRENT_SIZE to $TARGET_SIZE"
+
+            # Update fleet base capacity
+            aws codebuild update-fleet \
+              --arn "$FLEET_ARN" \
+              --base-capacity "$TARGET_SIZE" \
+              --region "$AWS_DEFAULT_REGION"
+
+            if [ $? -eq 0 ]; then
+              echo "✅ Fleet capacity updated successfully"
+            else
+              echo "❌ Failed to update fleet capacity"
+              exit 1
+            fi
+          fi
+
+
+      - name: 'Verify final status and generate summary'
+        run: |
+          echo "🏁 Final verification..."
+
+          # Get updated fleet status
+          FINAL_CAPACITY=$(aws codebuild batch-get-fleets \
+            --names "$FLEET_NAME" \
+            --region "$AWS_DEFAULT_REGION" \
+            --query 'fleets[0].baseCapacity' \
+            --output text)
+
+          FINAL_STATUS=$(aws codebuild batch-get-fleets \
+            --names "$FLEET_NAME" \
+            --region "$AWS_DEFAULT_REGION" \
+            --query 'fleets[0].status.statusCode' \
+            --output text)
+
+          echo "📊 Final capacity: $FINAL_CAPACITY"
+          echo "🟢 Final status: $FINAL_STATUS"
+
+          # Generate GitHub Actions summary
+          echo "## 🚀 Fleet Controller Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Fleet Size:** ${{ steps.determine-size.outputs.fleet_size }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ steps.determine-size.outputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Previous Capacity:** ${{ steps.current-status.outputs.current_capacity }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Final Capacity:** $FINAL_CAPACITY" >> $GITHUB_STEP_SUMMARY
+          echo "**Fleet Status:** $FINAL_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ env.AWS_DEFAULT_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Triggered by:** Scheduled automation" >> $GITHUB_STEP_SUMMARY
+          fi
