@@ -36,7 +36,7 @@ env:
 jobs:
   fleet-control:
     name: 'Fleet Control'
-    runs-on: codebuild
+    runs-on: ${{ format('codebuild-runner-{0}-{1}-{2}', github.event.repository.name, github.run_id, github.run_attempt) }}
 
     steps:
       - name: 'Determine fleet size based on trigger'
@@ -141,52 +141,6 @@ jobs:
             fi
           fi
 
-      - name: 'Update CodeBuild projects to use fleet'
-        run: |
-          TARGET_SIZE="${{ steps.determine-size.outputs.fleet_size }}"
-          FLEET_ARN="${{ steps.current-status.outputs.fleet_arn }}"
-
-          # Get all GitHub runner projects (starting with 'runner-')
-          PROJECTS=$(aws codebuild list-projects \
-            --region "$AWS_DEFAULT_REGION" \
-            --query 'projects[?starts_with(@, `runner-`)]' \
-            --output text)
-
-          if [ -z "$PROJECTS" ]; then
-            echo "ℹ️ No runner projects found"
-            exit 0
-          fi
-
-          echo "🔄 Updating CodeBuild projects..."
-
-          for PROJECT in $PROJECTS; do
-            echo "📝 Updating project: $PROJECT"
-
-            if [ "$TARGET_SIZE" -gt 0 ]; then
-              # Switch to fleet when capacity > 0
-              aws codebuild update-project \
-                --name "$PROJECT" \
-                --environment '{
-                  "type": "LINUX_CONTAINER",
-                  "computeType": "BUILD_GENERAL1_SMALL",
-                  "image": "aws/codebuild/amazonlinux-x86_64-standard:5.0",
-                  "fleet": {"fleetArn": "'$FLEET_ARN'"}
-                }' \
-                --region "$AWS_DEFAULT_REGION" > /dev/null
-              echo "  ✅ $PROJECT → fleet"
-            else
-              # Switch to on-demand when capacity = 0
-              aws codebuild update-project \
-                --name "$PROJECT" \
-                --environment '{
-                  "type": "LINUX_CONTAINER",
-                  "computeType": "BUILD_GENERAL1_SMALL",
-                  "image": "aws/codebuild/amazonlinux-x86_64-standard:5.0"
-                }' \
-                --region "$AWS_DEFAULT_REGION" > /dev/null
-              echo "  ✅ $PROJECT → on-demand"
-            fi
-          done
 
       - name: 'Verify final status and generate summary'
         run: |
