@@ -58,7 +58,7 @@ show_usage() {
     echo "  $0 monitor           # Monitor fleet metrics"
     echo "  $0 switch_to_fleet   # Switch projects to use fleet"
     echo "  $0 switch_to_ondemand # Switch ALL projects to on-demand"
-    echo "  PROJECT_NAMES='runner-BJST,runner-aws-codebuild-docker-image' $0 switch_to_ondemand # Switch specific projects"
+    echo "  PROJECT_NAMES='runner-BJST,runner-aws-global-infra' $0 switch_to_ondemand # Switch specific projects"
     echo "  $0 enable_scheduler  # Enable EventBridge scheduler"
     echo "  $0 disable_scheduler # Disable EventBridge scheduler"
     echo ""
@@ -288,7 +288,7 @@ switch_to_fleet() {
 
     if [ -z "$PROJECT_NAMES" ]; then
         print_error "PROJECT_NAMES environment variable is required"
-        print_error "Example: PROJECT_NAMES='runner-BJST,runner-aws-codebuild-docker-image' $0 switch_to_fleet"
+        print_error "Example: PROJECT_NAMES='runner-BJST,runner-aws-global-infra' $0 switch_to_fleet"
         exit 1
     fi
 

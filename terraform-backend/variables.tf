@@ -1,15 +1,15 @@
-# aws-codebuild-docker-image/terraform-backend/variables.tf
+# aws-global-infra/terraform-backend/variables.tf
 
 variable "bucket_name" {
   description = "Name of the S3 bucket for Terraform state"
   type        = string
-  default     = "docker-image-4codebuild-tfstate"
+  default     = "aws-global-infra-tfstate"
 }
 
 variable "dynamodb_table" {
   description = "Name of the DynamoDB table for Terraform state locking"
   type        = string
-  default     = "docker-image-4codebuild-tfstate-lock"
+  default     = "aws-global-infra-tfstate-lock"
 }
 
 variable "aws_region" {

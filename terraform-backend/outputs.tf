@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform-backend/outputs.tf
+# aws-global-infra/terraform-backend/outputs.tf
 
 output "bucket_name" {
   description = "Name of the S3 bucket for Terraform state"

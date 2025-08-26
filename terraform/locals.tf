@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform/locals.tf
+# aws-global-infra/terraform/locals.tf
 
 # Local variable for GitHub repositories that need CodeBuild runners
 locals {
@@ -10,9 +10,9 @@ locals {
       branch      = "main"
     },
     {
-      name        = "aws-codebuild-docker-image"
+      name        = "aws-global-infra"
       owner       = "chaunceyyann"
-      description = "GitHub Actions runner for aws-codebuild-docker-image repository"
+      description = "GitHub Actions runner for aws-global-infra repository"
       branch      = "main"
     },
     {

@@ -124,8 +124,7 @@ verify_deployment() {
 
     # Check CodeBuild projects
     echo "Checking CodeBuild projects..."
-    aws codebuild list-projects --region $AWS_REGION | grep -q "docker-image-4codebuild"
-    aws codebuild list-projects --region $AWS_REGION | grep -q "code-scanner-4codebuild"
+    aws codebuild list-projects --region $AWS_REGION | grep -q "container-image-builder"
 
     echo -e "${GREEN}✅ Deployment verified successfully${NC}"
     echo ""
@@ -137,7 +136,7 @@ show_next_steps() {
     echo "============="
     echo ""
     echo "1. Monitor the first build:"
-    echo "   aws codebuild start-build --project-name docker-image-4codebuild --region $AWS_REGION"
+    echo "   aws codebuild start-build --project-name container-image-builder --region $AWS_REGION"
     echo ""
     echo "2. Check build logs:"
     echo "   aws logs describe-log-groups --log-group-name-prefix '/aws/codebuild/' --region $AWS_REGION"

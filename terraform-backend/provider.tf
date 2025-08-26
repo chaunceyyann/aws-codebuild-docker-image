@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform-backend/provider.tf
+# aws-global-infra/terraform-backend/provider.tf
 
 terraform {
   required_providers {

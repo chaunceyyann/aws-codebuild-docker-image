@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform/data.tf
+# aws-global-infra/terraform/data.tf
 
 # GitHub OAuth token from Secrets Manager
 data "aws_secretsmanager_secret" "github_token" {
