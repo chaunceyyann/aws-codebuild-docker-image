@@ -60,8 +60,8 @@ jobs:
         continue-on-error: true
         run: |
           aws dynamodb delete-item \
-            --table-name docker-image-4codebuild-tfstate-lock \
-            --key '{"LockID": {"S": "docker-image-4codebuild-tfstate/terraform.tfstate"}}' \
+            --table-name aws-global-infra-tfstate-lock \
+            --key '{"LockID": {"S": "aws-global-infra-tfstate/terraform.tfstate"}}' \
             --region us-east-1
 
       - name: Terraform Init
@@ -76,8 +76,7 @@ jobs:
           terraform plan -no-color \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
-            -var="docker_builder_project_name=docker-image-4codebuild" \
-            -var="code_scanner_project_name=code-scanner-4codebuild" \
+            -var="docker_builder_project_name=container-image-builder" \
             -var="base_image_version=${{ env.BASE_IMAGE_VERSION }}" \
             -var="scanner_image_version=${{ env.SCANNER_IMAGE_VERSION }}"
 
@@ -88,8 +87,7 @@ jobs:
           terraform apply -auto-approve \
             -var="aws_region=us-east-1" \
             -var="ecr_repo_name=docker-image-4codebuild-repo" \
-            -var="docker_builder_project_name=docker-image-4codebuild" \
-            -var="code_scanner_project_name=code-scanner-4codebuild" \
+            -var="docker_builder_project_name=container-image-builder" \
             -var="base_image_version=${{ env.BASE_IMAGE_VERSION }}" \
             -var="scanner_image_version=${{ env.SCANNER_IMAGE_VERSION }}"
 

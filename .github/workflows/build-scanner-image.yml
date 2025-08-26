@@ -34,6 +34,6 @@ jobs:
       - name: Run CodeBuild
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
-          project-name: code-scanner-4codebuild
+          project-name: container-image-builder
           env-vars-for-codebuild: |
             VERSION=${{ env.SCANNER_IMAGE_VERSION }}

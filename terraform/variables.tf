@@ -11,16 +11,12 @@ variable "ecr_repo_name" {
 }
 
 variable "docker_builder_project_name" {
-  description = "Name of the Docker builder CodeBuild project"
+  description = "Name of the container image builder CodeBuild project"
   type        = string
-  default     = "docker-image-4codebuild"
+  default     = "container-image-builder"
 }
 
-variable "code_scanner_project_name" {
-  description = "Name of the code scanner CodeBuild project"
-  type        = string
-  default     = "code-scanner-4codebuild"
-}
+# Scanner functionality is handled by the container-image-builder project
 
 variable "base_image_version" {
   description = "Version of the base Docker image"

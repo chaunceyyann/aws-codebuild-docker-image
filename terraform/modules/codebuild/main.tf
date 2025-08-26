@@ -111,7 +111,7 @@ resource "aws_codebuild_project" "build" {
   # Resource tags
   tags = {
     Name    = var.project_name
-    Project = "docker-image-4codebuild"
+    Project = "aws-global-infra"
   }
 }
 

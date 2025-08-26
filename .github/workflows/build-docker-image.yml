@@ -97,6 +97,6 @@ jobs:
       - name: Run CodeBuild
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
-          project-name: docker-image-4codebuild
+          project-name: container-image-builder
           env-vars-for-codebuild: |
             VERSION=${{ env.BASE_IMAGE_VERSION }}

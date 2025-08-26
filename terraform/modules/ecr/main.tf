@@ -1,6 +1,7 @@
 resource "aws_ecr_repository" "this" {
   name                 = var.repository_name
   image_tag_mutability = "IMMUTABLE"
+  force_delete         = true  # Allow deletion of repository with images
 
   image_scanning_configuration {
     scan_on_push = true
@@ -13,7 +14,7 @@ resource "aws_ecr_repository" "this" {
   tags = {
     Name        = var.repository_name
     Environment = "Production"
-    Project     = "docker-image-4codebuild"
+    Project     = "aws-global-infra"
   }
 }
 

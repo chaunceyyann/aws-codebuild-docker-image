@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform/security.tf
+# aws-global-infra/terraform/security.tf
 
 # Shared security group for all CodeBuild projects
 resource "aws_security_group" "codebuild_sg" {

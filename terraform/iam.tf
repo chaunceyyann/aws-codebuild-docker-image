@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform/iam.tf
+# aws-global-infra/terraform/iam.tf
 
 # Shared IAM role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {

@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform/provider.tf
+# aws-global-infra/terraform/provider.tf
 
 terraform {
   required_providers {
@@ -10,10 +10,10 @@ terraform {
   required_version = ">= 1.6.6"
 
   backend "s3" {
-    bucket         = "docker-image-4codebuild-tfstate"
+    bucket         = "aws-global-infra-tfstate"
     key            = "terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "docker-image-4codebuild-tfstate-lock"
+    dynamodb_table = "aws-global-infra-tfstate-lock"
   }
 }
 

@@ -1,12 +1,13 @@
-# aws-codebuild-docker-image/terraform-backend/main.tf
+# aws-global-infra/terraform-backend/main.tf
 
 resource "aws_s3_bucket" "tfstate" {
-  bucket = var.bucket_name
+  bucket        = var.bucket_name
+  force_destroy = true  # Allow deletion of non-empty bucket
 
   tags = {
     Name        = var.bucket_name
     Environment = "Production"
-    Project     = "docker-image-4codebuild"
+    Project     = "aws-global-infra"
   }
 }
 
@@ -56,6 +57,6 @@ resource "aws_dynamodb_table" "tfstate_lock" {
   tags = {
     Name        = var.dynamodb_table
     Environment = "Production"
-    Project     = "docker-image-4codebuild"
+    Project     = "aws-global-infra"
   }
 }

@@ -28,16 +28,16 @@ This project automates the daily creation of a customized, secure Docker image f
 
 ### Quick Start (Recommended)
 ```bash
-git clone https://github.com/<your-repo>/aws-codebuild-docker-image.git
-cd aws-codebuild-docker-image
+git clone https://github.com/<your-repo>/aws-global-infra.git
+cd aws-global-infra
 ./deploy.sh
 ```
 
 ### Manual Installation
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/<your-repo>/aws-codebuild-docker-image.git
-   cd aws-codebuild-docker-image
+   git clone https://github.com/<your-repo>/aws-global-infra.git
+   cd aws-global-infra
    ```
    Ensure OpenSSL is installed to avoid `SSL_ERROR_SYSCALL` (e.g., `sudo apt install openssl` on Ubuntu).
 

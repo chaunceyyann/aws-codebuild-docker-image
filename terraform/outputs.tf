@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/terraform/outputs.tf
+# aws-global-infra/terraform/outputs.tf
 
 output "docker_builder_project_name" {
   description = "Name of the Docker builder CodeBuild project"
@@ -10,15 +10,7 @@ output "docker_builder_project_arn" {
   value       = module.codebuild_docker.project_arn
 }
 
-output "code_scanner_project_name" {
-  description = "Name of the code scanner CodeBuild project"
-  value       = module.codebuild_scanner.project_name
-}
-
-output "code_scanner_project_arn" {
-  description = "ARN of the code scanner CodeBuild project"
-  value       = module.codebuild_scanner.project_arn
-}
+# Scanner functionality is now part of the unified container-image-builder
 
 output "ecr_repository_url" {
   description = "URL of the ECR repository"

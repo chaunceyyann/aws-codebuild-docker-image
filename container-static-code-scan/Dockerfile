@@ -1,4 +1,4 @@
-# aws-codebuild-docker-image/Dockerfile
+# aws-global-infra/Dockerfile
 
 # Use our base image from ECR
 ARG ECR_REPO_URL
