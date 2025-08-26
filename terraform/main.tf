@@ -13,15 +13,13 @@ module "compute_fleet" {
   min_capacity             = var.fleet_min_capacity
   environment_type         = "LINUX_CONTAINER"
   compute_type             = "BUILD_GENERAL1_SMALL"
-  vpc_id                   = module.vpc.vpc_id
-  private_subnet_ids       = module.vpc.private_subnet_ids
-  security_group_id        = aws_security_group.codebuild_sg.id
+  # No VPC config - compute fleet uses public networking for GitHub API access
   aws_region               = var.aws_region
   tags                     = var.tags
   enable_scheduled_control = true
   schedule_expression      = "cron(0 8,12,16,20 * * ? *)" # 8 AM, 12 PM, 4 PM, 8 PM UTC daily
 
-  depends_on = [module.vpc, aws_security_group.codebuild_sg]
+  # Remove VPC dependency since fleet doesn't need VPC resources
 }
 
 # CodeArtifact module for package management

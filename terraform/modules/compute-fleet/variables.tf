@@ -24,18 +24,21 @@ variable "compute_type" {
 }
 
 variable "vpc_id" {
-  description = "VPC ID for the compute fleet"
+  description = "VPC ID for the compute fleet (optional - fleet uses public networking for GitHub access)"
   type        = string
+  default     = null
 }
 
 variable "private_subnet_ids" {
-  description = "List of private subnet IDs for the compute fleet"
+  description = "List of private subnet IDs for the compute fleet (optional - fleet uses public networking)"
   type        = list(string)
+  default     = []
 }
 
 variable "security_group_id" {
-  description = "Security group ID for the compute fleet"
+  description = "Security group ID for the compute fleet (optional - fleet uses public networking)"
   type        = string
+  default     = null
 }
 
 variable "target_capacity" {

@@ -14,11 +14,8 @@ resource "aws_codebuild_fleet" "main" {
   compute_type = var.compute_type
   fleet_service_role = aws_iam_role.fleet_role.arn
 
-  vpc_config {
-    vpc_id             = var.vpc_id
-    subnets            = [var.private_subnet_ids[0]]  # CodeBuild fleets only support 1 subnet
-    security_group_ids = [var.security_group_id]
-  }
+  # No VPC config - use public networking for GitHub API access
+  # This allows compute fleet instances to reach GitHub APIs for runner registration
 
   tags = merge(var.tags, {
     Name = var.fleet_name
