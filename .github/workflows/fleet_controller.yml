@@ -2,21 +2,21 @@ name: 'Fleet Controller'
 
 on:
     # Automated fleet scaling schedules (Eastern Time)
-  schedule:
-    # Weekend: Set fleet to minimum capacity (1)
-    # Saturday 12:00 AM ET = 4:00/5:00 AM UTC (EST/EDT)
-    - cron: '0 4 * * SAT'   # EST
-    - cron: '0 5 * * SAT'   # EDT
+#   schedule:
+#     # Weekend: Set fleet to minimum capacity (1)
+#     # Saturday 12:00 AM ET = 4:00/5:00 AM UTC (EST/EDT)
+#     - cron: '0 4 * * SAT'   # EST
+#     - cron: '0 5 * * SAT'   # EDT
 
-    # Wednesday night: Scale up for high demand (30)
-    # Wednesday 10:00 PM ET = Thursday 2:00/3:00 AM UTC
-    - cron: '0 2 * * THU'   # EST
-    - cron: '0 3 * * THU'   # EDT
+#     # Wednesday night: Scale up for high demand (30)
+#     # Wednesday 10:00 PM ET = Thursday 2:00/3:00 AM UTC
+#     - cron: '0 2 * * THU'   # EST
+#     - cron: '0 3 * * THU'   # EDT
 
-    # Thursday morning: Scale back to workday normal (10)
-    # Thursday 4:00 AM ET = 8:00/9:00 AM UTC
-    - cron: '0 8 * * THU'   # EST
-    - cron: '0 9 * * THU'   # EDT
+#     # Thursday morning: Scale back to workday normal (10)
+#     # Thursday 4:00 AM ET = 8:00/9:00 AM UTC
+#     - cron: '0 8 * * THU'   # EST
+#     - cron: '0 9 * * THU'   # EDT
 
   # Manual trigger with fleet size input
   workflow_dispatch:
